@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import './auth.css';
+import { Link } from 'react-router-dom';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -13,7 +12,6 @@ const Signup = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -64,120 +62,153 @@ const Signup = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-logo">
-            ♻ Campus<span>Loop</span>
-          </div>
-          <h2>Join CampusLoop</h2>
-          <p>Create your account and start trading sustainably</p>
-        </div>
+    <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(16,185,129,0.18)_0,transparent_30%),radial-gradient(circle_at_80%_0,rgba(59,130,246,0.18)_0,transparent_28%)] opacity-70" aria-hidden />
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
-          
-          <div className="form-group">
-            <label htmlFor="fullName">Full Name</label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              placeholder="John Doe"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">University Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="your.name@university.edu"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-            <small>Use your official university email address</small>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="university">University</label>
-            <input
-              type="text"
-              id="university"
-              name="university"
-              placeholder="Enter your university name"
-              value={formData.university}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* <div className="form-row"> */}
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Min. 6 characters"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
+      <div className="relative mx-auto flex min-h-screen max-w-6xl items-center px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid w-full gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
+              ♻ Join the loop
             </div>
-        
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="Re-enter password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-              />
+            <h1 className="text-4xl font-extrabold text-slate-900 sm:text-5xl">
+              Create your CampusLoop account
+              <span className="block text-emerald-600">Trade sustainably with your peers.</span>
+            </h1>
+            <p className="max-w-xl text-lg text-slate-600">
+              Keep textbooks, gadgets, and lab gear in circulation. Your university email keeps transactions safe and local.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {["Verified students", "Meet on campus", "Zero fees"].map((item) => (
+                <div key={item} className="rounded-2xl bg-white p-4 text-center text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200">
+                  {item}
+                </div>
+              ))}
             </div>
-          {/* </div> */}
-
-          <div className="form-group checkbox-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                name="agreeToTerms"
-                checked={formData.agreeToTerms}
-                onChange={handleChange}
-              />
-              <span>
-                I agree to the{' '}
-                <Link to="/terms" className="inline-link">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link to="/privacy" className="inline-link">
-                  Privacy Policy
-                </Link>
-              </span>
-            </label>
           </div>
 
-          <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </button>
-        </form>
+          <div className="glass-card w-full max-w-xl border border-white/70 bg-white/90 p-8 shadow-2xl ring-1 ring-slate-200">
+            <div className="mb-6 text-center">
+              <div className="text-2xl font-extrabold text-emerald-700">Create account</div>
+              <p className="text-sm text-slate-500">Use your university email for faster verification</p>
+            </div>
 
-        <div className="auth-footer">
-          <p>
-            Already have an account?{' '}
-            <Link to="/login" className="auth-link">
-              Sign in here
-            </Link>
-          </p>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              {error && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                  {error}
+                </div>
+              )}
+
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-slate-800">Full name</span>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  placeholder="John Doe"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                  required
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-slate-800">University email</span>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="your.name@university.edu"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                  required
+                />
+                <span className="text-xs text-slate-500">Use your official university email address</span>
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-slate-800">University</span>
+                <input
+                  type="text"
+                  id="university"
+                  name="university"
+                  placeholder="Enter your university name"
+                  value={formData.university}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                  required
+                />
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-slate-800">Password</span>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Min. 6 characters"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                    required
+                  />
+                </label>
+
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-slate-800">Confirm password</span>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    placeholder="Re-enter password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                    required
+                  />
+                </label>
+              </div>
+
+              <label className="flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-inner">
+                <input
+                  type="checkbox"
+                  name="agreeToTerms"
+                  checked={formData.agreeToTerms}
+                  onChange={handleChange}
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span>
+                  I agree to the{' '}
+                  <Link to="/terms" className="font-semibold text-emerald-700 hover:text-emerald-600">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link to="/privacy" className="font-semibold text-emerald-700 hover:text-emerald-600">
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 to-cyan-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/60 disabled:cursor-not-allowed disabled:opacity-80"
+              >
+                {loading ? 'Creating account...' : 'Create account'}
+              </button>
+            </form>
+
+            <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-center text-sm text-slate-600 ring-1 ring-slate-100">
+              Already have an account?{' '}
+              <Link to="/login" className="font-semibold text-emerald-700 hover:text-emerald-600">
+                Sign in here
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
