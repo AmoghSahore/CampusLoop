@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -22,17 +24,19 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await axios.post('/api/auth/login', formData);
-      // localStorage.setItem('token', response.data.token);
-      // navigate('/');
-      
-      console.log('Login attempt:', formData);
-      // Temporary success simulation
-      setTimeout(() => {
-        setLoading(false);
-        alert('Login functionality - connect to backend API');
-      }, 1000);
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // Store token and user in localStorage so other pages can access them
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+
+      // Tell the Navbar to re-check auth state immediately
+      window.dispatchEvent(new Event('authChange'));
+
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
       setLoading(false);

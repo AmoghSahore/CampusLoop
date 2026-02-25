@@ -6,70 +6,33 @@ import { getToken, getUser, logout } from '../services/authService';
 const ProfilePage = () => {
   const navigate = useNavigate();
   const currentUser = getUser();
-  
+
   const [userProfile, setUserProfile] = useState(null);
   const [userListings, setUserListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = getToken();
-        
-        // Fetch user profile
-        const profileResponse = await axios.get('http://localhost:5000/api/users/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUserProfile(profileResponse.data);
 
-        // Fetch user's listings
-        const listingsResponse = await axios.get('http://localhost:5000/api/users/listings', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Fetch profile and listings in parallel for speed
+        const [profileResponse, listingsResponse] = await Promise.all([
+          axios.get('http://localhost:5000/api/users/profile', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:5000/api/users/listings', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+        ]);
+
+        setUserProfile(profileResponse.data);
         setUserListings(listingsResponse.data);
       } catch (err) {
         console.error('Error fetching user data:', err);
-        
-        // Sample data for testing
-        setUserProfile({
-          name: 'John Doe',
-          email: 'john@university.edu',
-          greenCredits: 850,
-          memberSince: new Date(2024, 0, 15).toISOString(),
-          totalListings: 8,
-          completedTransactions: 12
-        });
-
-        setUserListings([
-          {
-            _id: '1',
-            title: 'Operating Systems Concepts (8th ed.)',
-            price: 450,
-            category: 'Textbooks',
-            condition: 'Like new',
-            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            imageUrl: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=400&q=80'
-          },
-          {
-            _id: '4',
-            title: 'Ergonomic study chair',
-            price: 2800,
-            category: 'Furniture',
-            condition: '1 year old',
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            imageUrl: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=400&q=80'
-          },
-          {
-            _id: '6',
-            title: 'Scientific Calculator TI-84',
-            price: 1500,
-            category: 'Electronics',
-            condition: 'Good',
-            createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-            imageUrl: 'https://images.unsplash.com/photo-1611163321484-1b7cca510dcc?auto=format&fit=crop&w=400&q=80'
-          }
-        ]);
+        setError('Could not load your profile. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -77,6 +40,7 @@ const ProfilePage = () => {
 
     fetchUserData();
   }, []);
+
 
   const handleDeleteListing = async (listingId) => {
     if (!window.confirm('Are you sure you want to delete this listing?')) {
@@ -89,7 +53,7 @@ const ProfilePage = () => {
       await axios.delete(`http://localhost:5000/api/products/${listingId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       // Remove from local state
       setUserListings(userListings.filter(listing => listing._id !== listingId));
       alert('Listing deleted successfully!');
@@ -105,7 +69,8 @@ const ProfilePage = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    window.dispatchEvent(new Event('authChange'));
+    navigate('/');
   };
 
   const getGreenCreditsLevel = (credits) => {
@@ -124,6 +89,23 @@ const ProfilePage = () => {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-emerald-50">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-rose-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
 
   const creditsInfo = getGreenCreditsLevel(userProfile?.greenCredits || 0);
 

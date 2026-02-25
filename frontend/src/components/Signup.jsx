@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Signup = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -25,17 +27,15 @@ const Signup = () => {
     e.preventDefault();
     setError('');
 
-    // Validation
+    // Client-side validations (the server double-checks these too)
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
       return;
     }
-
     if (!formData.agreeToTerms) {
       setError('You must agree to the terms and conditions');
       return;
@@ -44,17 +44,22 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await axios.post('/api/auth/signup', formData);
-      // localStorage.setItem('token', response.data.token);
-      // navigate('/');
-      
-      console.log('Signup attempt:', formData);
-      // Temporary success simulation
-      setTimeout(() => {
-        setLoading(false);
-        alert('Signup functionality - connect to backend API');
-      }, 1000);
+      const response = await axios.post('http://localhost:5000/api/auth/signup', {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
+
+      // Store token and user so the user is instantly logged in
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+
+      // Tell the Navbar to re-check auth state immediately
+      window.dispatchEvent(new Event('authChange'));
+
+      // Go straight to the home page — no separate login step needed
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed. Please try again.');
       setLoading(false);
