@@ -14,6 +14,12 @@ const PostAdPage = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Bidding-related state
+  const [enableBidding, setEnableBidding] = useState(false);
+  const [biddingDuration, setBiddingDuration] = useState(1);
+  const [buyoutPrice, setBuyoutPrice] = useState('');
+  const [enableBuyout, setEnableBuyout] = useState(false);
 
   const categories = [
     'Textbooks',
@@ -78,6 +84,20 @@ const PostAdPage = () => {
       setLoading(false);
       return;
     }
+    
+    // Bidding validation
+    if (enableBidding) {
+      if (biddingDuration < 1) {
+        setError('Bidding duration must be at least 1 day');
+        setLoading(false);
+        return;
+      }
+      if (enableBuyout && (!buyoutPrice || parseFloat(buyoutPrice) <= parseFloat(formData.price))) {
+        setError('Buyout price must be higher than the starting price');
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       // Create FormData object for file upload
@@ -87,6 +107,15 @@ const PostAdPage = () => {
       postData.append('price', formData.price);
       postData.append('description', formData.description);
       postData.append('image', image);
+      
+      // Add bidding data if enabled
+      if (enableBidding) {
+        postData.append('biddingEnabled', 'true');
+        postData.append('biddingDuration', biddingDuration);
+        if (enableBuyout && buyoutPrice) {
+          postData.append('buyoutPrice', buyoutPrice);
+        }
+      }
 
       // Get token from localStorage for authentication
       const token = localStorage.getItem('token');
@@ -187,7 +216,7 @@ const PostAdPage = () => {
             {/* Price */}
             <div className="space-y-2">
               <label htmlFor="price" className="text-sm font-semibold text-slate-800">
-                Price <span className="text-rose-500">*</span>
+                {enableBidding ? 'Starting Price' : 'Price'} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-600">₹</span>
@@ -204,6 +233,100 @@ const PostAdPage = () => {
                   required
                 />
               </div>
+              {enableBidding && (
+                <p className="text-xs text-slate-500">
+                  This will be the starting price for the auction
+                </p>
+              )}
+            </div>
+            
+            {/* Bidding Options */}
+            <div className="space-y-4 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/50 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label htmlFor="enableBidding" className="text-sm font-semibold text-slate-800">
+                    🔨 Enable Bidding/Auction
+                  </label>
+                  <p className="text-xs text-slate-600">Allow users to bid on your item</p>
+                </div>
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    id="enableBidding"
+                    checked={enableBidding}
+                    onChange={(e) => setEnableBidding(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="peer h-6 w-11 rounded-full bg-slate-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500/30"></div>
+                </label>
+              </div>
+              
+              {enableBidding && (
+                <div className="space-y-4 pt-2">
+                  {/* Bidding Duration */}
+                  <div className="space-y-2">
+                    <label htmlFor="biddingDuration" className="text-sm font-semibold text-slate-800">
+                      Auction Duration (days) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      id="biddingDuration"
+                      min="1"
+                      value={biddingDuration}
+                      onChange={(e) => setBiddingDuration(parseInt(e.target.value) || 1)}
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                      required={enableBidding}
+                    />
+                    <p className="text-xs text-slate-500">
+                      Minimum 1 day. The auction will end after this duration.
+                    </p>
+                  </div>
+                  
+                  {/* Enable Buyout */}
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="enableBuyout"
+                      checked={enableBuyout}
+                      onChange={(e) => setEnableBuyout(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500/30"
+                    />
+                    <div className="flex-1">
+                      <label htmlFor="enableBuyout" className="text-sm font-semibold text-slate-800">
+                        ⚡ Add Buyout Price (Optional)
+                      </label>
+                      <p className="text-xs text-slate-600">
+                        Allow buyers to instantly purchase at this price
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Buyout Price */}
+                  {enableBuyout && (
+                    <div className="space-y-2">
+                      <label htmlFor="buyoutPrice" className="text-sm font-semibold text-slate-800">
+                        Buyout Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-600">₹</span>
+                        <input
+                          type="number"
+                          id="buyoutPrice"
+                          placeholder="Enter buyout price"
+                          min={parseFloat(formData.price) + 1 || 1}
+                          step="0.01"
+                          value={buyoutPrice}
+                          onChange={(e) => setBuyoutPrice(e.target.value)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pl-8 text-sm text-slate-800 shadow-inner focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        Must be higher than the starting price
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Description */}

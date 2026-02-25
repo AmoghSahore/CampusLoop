@@ -17,19 +17,19 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/product/:id" element={<ProductDetailsPage />} />
         <Route path="/post-ad" element={
-          <ProtectedRoute>
+          // <ProtectedRoute>
             <PostAdPage />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         } />
         <Route path="/chat" element={
-          <ProtectedRoute>
+          // <ProtectedRoute>
             <ChatPage />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         } />
         <Route path="/profile" element={
-          <ProtectedRoute>
+          // <ProtectedRoute>
             <ProfilePage />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         } />
         <Route path="/" element={<HomePage />} />
       </Routes>

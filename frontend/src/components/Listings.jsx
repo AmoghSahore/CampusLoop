@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import axios from "axios";
 import ProductCard from "./ProductCard";
 
-const filters = ["All", "Free", "Rent", "Sale"];
+const filters = ["All", "Free", "Rent", "Sale", "Auction"];
 
 // Sample products for testing
 const sampleProducts = [
@@ -142,9 +142,15 @@ const Listings = ({ searchQuery = "", selectedCategory = "" }) => {
   const visibleListings = useMemo(() => {
     let filtered = products;
 
-    // Filter by type (Free, Rent, Sale)
+    // Filter by type (Free, Rent, Sale, Auction)
     if (activeFilter !== "All") {
-      filtered = filtered.filter((item) => item.type === activeFilter);
+      if (activeFilter === "Auction") {
+        // Filter for auction/bidding items
+        filtered = filtered.filter((item) => item.bidding?.enabled === true);
+      } else {
+        // Filter for regular types
+        filtered = filtered.filter((item) => item.type === activeFilter);
+      }
     }
 
     // Filter by search query

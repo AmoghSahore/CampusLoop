@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import BiddingInterface from './BiddingInterface';
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -108,23 +109,25 @@ const ProductDetailsPage = () => {
                 {product.title}
               </h1>
 
-              {/* Price */}
-              <div className="mt-4 flex items-baseline gap-3">
-                <p className="text-4xl font-extrabold text-emerald-600">
-                  ₹{product.price}
-                </p>
-                {product.type && (
-                  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                    product.type === "Free"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : product.type === "Rent"
-                        ? "bg-sky-100 text-sky-700"
-                        : "bg-amber-100 text-amber-800"
-                  }`}>
-                    {product.type}
-                  </span>
-                )}
-              </div>
+              {/* Price - Show only if bidding is not enabled */}
+              {!product.bidding?.enabled && (
+                <div className="mt-4 flex items-baseline gap-3">
+                  <p className="text-4xl font-extrabold text-emerald-600">
+                    ₹{product.price}
+                  </p>
+                  {product.type && (
+                    <span className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                      product.type === "Free"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : product.type === "Rent"
+                          ? "bg-sky-100 text-sky-700"
+                          : "bg-amber-100 text-amber-800"
+                    }`}>
+                      {product.type}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Description */}
               {product.description && (
@@ -170,19 +173,36 @@ const ProductDetailsPage = () => {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="mt-8 flex gap-4">
-                <Link
-                  to={`/chat?sellerId=${product.seller?._id || product.seller}`}
-                  className="flex-1 rounded-full bg-gradient-to-r from-emerald-600 to-cyan-500 px-6 py-3 text-center text-base font-semibold text-white shadow-glow transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
-                >
-                  💬 Chat with Seller
-                </Link>
-                <button className="rounded-full border border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-emerald-400 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/60">
-                  ♡
-                </button>
-              </div>
+              {/* Action Buttons - Only show for non-bidding items */}
+              {!product.bidding?.enabled && (
+                <div className="mt-8 flex gap-4">
+                  <Link
+                    to={`/chat?sellerId=${product.seller?._id || product.seller}`}
+                    className="flex-1 rounded-full bg-gradient-to-r from-emerald-600 to-cyan-500 px-6 py-3 text-center text-base font-semibold text-white shadow-glow transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
+                  >
+                    💬 Chat with Seller
+                  </Link>
+                  <button className="rounded-full border border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-emerald-400 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/60">
+                    ♡
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Bidding Interface - Show only for bidding items */}
+            {product.bidding?.enabled && (
+              <BiddingInterface 
+                product={product}
+                onBidPlaced={(result) => {
+                  console.log('Bid placed:', result);
+                  // Optionally refresh product data
+                }}
+                onBuyout={(result) => {
+                  console.log('Buyout executed:', result);
+                  // Optionally redirect or show success message
+                }}
+              />
+            )}
 
             {/* Safety Tips */}
             <div className="glass-card border border-white/70 bg-white/90 p-6 shadow-lg ring-1 ring-slate-200">

@@ -1,16 +1,3 @@
-# Environment
-.env
-.env.local
-
-# Dependencies
+uploads/
 node_modules/
-
-# Uploads
-uploads/*
-!uploads/.gitkeep
-
-# Logs
-*.log
-
-# Build
-dist/
+.env
