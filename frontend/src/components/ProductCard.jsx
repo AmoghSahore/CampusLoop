@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
+import API_BASE from '../config/api.js';
 
 const ProductCard = ({ product }) => {
   // Construct image URL from backend
-  const imageUrl = product.imageUrl || `http://localhost:5000/api/products/${product._id}/image`;
+  const imageUrl = product.imageUrl || `${API_BASE}/api/products/${product._id}/image`;
 
   return (
     <Link to={`/product/${product._id}`}>
@@ -30,7 +31,7 @@ const ProductCard = ({ product }) => {
           <h3 className="mb-1 line-clamp-2 text-base font-bold text-slate-900 group-hover:text-emerald-600">
             {product.title}
           </h3>
-          
+
           <div className="flex items-baseline gap-2">
             <p className="text-xl font-extrabold text-emerald-600">
               ₹{product.price}

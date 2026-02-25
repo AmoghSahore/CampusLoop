@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { getToken } from '../services/authService';
+import API_BASE from '../config/api.js';
 
 const ChatPage = () => {
   const [searchParams] = useSearchParams();
   const prefilledSellerId = searchParams.get('sellerId');
-  
+
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -18,15 +19,15 @@ const ChatPage = () => {
   const fetchChats = async () => {
     try {
       const token = getToken();
-      const response = await axios.get('http://localhost:5000/api/chats', {
+      const response = await axios.get(`${API_BASE}/api/chats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       setChats(response.data || []);
-      
+
       // If sellerId is prefilled and no active chat, create or select chat with that seller
       if (prefilledSellerId && !activeChat) {
-        const existingChat = response.data.find(chat => 
+        const existingChat = response.data.find(chat =>
           chat.participants?.some(p => p._id === prefilledSellerId)
         );
         if (existingChat) {
@@ -64,10 +65,10 @@ const ChatPage = () => {
   // Fetch messages for active chat
   const fetchMessages = async () => {
     if (!activeChat) return;
-    
+
     try {
       const token = getToken();
-      const response = await axios.get(`http://localhost:5000/api/chats/${activeChat._id}/messages`, {
+      const response = await axios.get(`${API_BASE}/api/chats/${activeChat._id}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(response.data || []);
@@ -106,11 +107,11 @@ const ChatPage = () => {
     try {
       const token = getToken();
       const response = await axios.post(
-        `http://localhost:5000/api/chats/${activeChat._id}/messages`,
+        `${API_BASE}/api/chats/${activeChat._id}/messages`,
         { text: newMessage },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       setMessages([...messages, response.data]);
       setNewMessage('');
     } catch (err) {
@@ -186,14 +187,13 @@ const ChatPage = () => {
             {chats.map((chat) => {
               const otherParticipant = chat.participants?.find(p => p._id !== currentUserId);
               const isActive = activeChat?._id === chat._id;
-              
+
               return (
                 <button
                   key={chat._id}
                   onClick={() => setActiveChat(chat)}
-                  className={`w-full border-b border-slate-100 p-4 text-left transition hover:bg-slate-50 ${
-                    isActive ? 'bg-emerald-50' : ''
-                  }`}
+                  className={`w-full border-b border-slate-100 p-4 text-left transition hover:bg-slate-50 ${isActive ? 'bg-emerald-50' : ''
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
@@ -203,8 +203,8 @@ const ChatPage = () => {
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold text-slate-900">{otherParticipant?.name || 'Unknown'}</h3>
                         <span className="text-xs text-slate-500">
-                          {chat.lastMessage?.createdAt ? 
-                            new Date(chat.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                          {chat.lastMessage?.createdAt ?
+                            new Date(chat.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             : ''}
                         </span>
                       </div>
@@ -246,7 +246,7 @@ const ChatPage = () => {
                     {activeChat.participants?.find(p => p._id !== currentUserId)?.name || 'Unknown'}
                   </h2>
                   {activeChat.product && (
-                    <Link 
+                    <Link
                       to={`/product/${activeChat.product._id}`}
                       className="text-sm text-emerald-600 hover:underline"
                     >
@@ -262,14 +262,13 @@ const ChatPage = () => {
               <div className="space-y-4">
                 {messages.map((message) => {
                   const isOwn = message.sender?._id === currentUserId;
-                  
+
                   return (
                     <div key={message._id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs rounded-2xl px-4 py-2 ${
-                        isOwn 
-                          ? 'bg-gradient-to-r from-emerald-600 to-cyan-500 text-white' 
-                          : 'bg-white text-slate-900 ring-1 ring-slate-200'
-                      }`}>
+                      <div className={`max-w-xs rounded-2xl px-4 py-2 ${isOwn
+                        ? 'bg-gradient-to-r from-emerald-600 to-cyan-500 text-white'
+                        : 'bg-white text-slate-900 ring-1 ring-slate-200'
+                        }`}>
                         <p className="text-sm">{message.text}</p>
                         <p className={`mt-1 text-xs ${isOwn ? 'text-emerald-100' : 'text-slate-500'}`}>
                           {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

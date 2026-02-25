@@ -1,7 +1,7 @@
-import axios from 'axios';
+import API_BASE from '../config/api.js';
 
-// Base API URL - adjust according to your backend configuration
-const API_URL = 'http://localhost:5000/api/auth';
+// Base API URL - comes from VITE_API_URL env var (see frontend/.env)
+const API_URL = `${API_BASE}/api/auth`;
 
 /**
  * Login user with email and password
