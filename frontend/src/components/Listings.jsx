@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import axios from "axios";
+import API_BASE from "../config/api.js";
 import ProductCard from "./ProductCard";
 
 const filters = ["All", "Free", "Rent", "Sale", "Auction"];
@@ -115,8 +116,8 @@ const Listings = ({ searchQuery = "", selectedCategory = "" }) => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:5000/api/products');
-        
+        const response = await axios.get(`${API_BASE}/api/products`);
+
         // If API returns data, use it; otherwise use sample data
         if (response.data && response.data.length > 0) {
           setProducts(response.data);
@@ -189,11 +190,10 @@ const Listings = ({ searchQuery = "", selectedCategory = "" }) => {
                 <button
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
-                    isActive
-                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
-                      : "bg-white text-slate-700 ring-1 ring-slate-200 hover:ring-emerald-300"
-                  }`}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${isActive
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
+                    : "bg-white text-slate-700 ring-1 ring-slate-200 hover:ring-emerald-300"
+                    }`}
                 >
                   {filter === "All" ? "All items" : filter}
                 </button>

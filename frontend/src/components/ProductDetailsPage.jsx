@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import BiddingInterface from './BiddingInterface';
+import API_BASE from '../config/api.js';
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -14,7 +14,7 @@ const ProductDetailsPage = () => {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const response = await axios.get(`${API_BASE}/api/products/${id}`);
         setProduct(response.data);
         setError(null);
       } catch (err) {
@@ -59,7 +59,7 @@ const ProductDetailsPage = () => {
     );
   }
 
-  const imageUrl = `http://localhost:5000/api/products/${id}/image`;
+  const imageUrl = `${API_BASE}/api/products/${id}/image`;
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
@@ -109,25 +109,22 @@ const ProductDetailsPage = () => {
                 {product.title}
               </h1>
 
-              {/* Price - Show only if bidding is not enabled */}
-              {!product.bidding?.enabled && (
-                <div className="mt-4 flex items-baseline gap-3">
-                  <p className="text-4xl font-extrabold text-emerald-600">
-                    ₹{product.price}
-                  </p>
-                  {product.type && (
-                    <span className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                      product.type === "Free"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : product.type === "Rent"
-                          ? "bg-sky-100 text-sky-700"
-                          : "bg-amber-100 text-amber-800"
+              {/* Price */}
+              <div className="mt-4 flex items-baseline gap-3">
+                <p className="text-4xl font-extrabold text-emerald-600">
+                  ₹{product.price}
+                </p>
+                {product.type && (
+                  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${product.type === "Free"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : product.type === "Rent"
+                      ? "bg-sky-100 text-sky-700"
+                      : "bg-amber-100 text-amber-800"
                     }`}>
-                      {product.type}
-                    </span>
-                  )}
-                </div>
-              )}
+                    {product.type}
+                  </span>
+                )}
+              </div>
 
               {/* Description */}
               {product.description && (

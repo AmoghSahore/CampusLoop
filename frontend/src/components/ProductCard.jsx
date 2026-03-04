@@ -1,43 +1,9 @@
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import API_BASE from '../config/api.js';
 
 const ProductCard = ({ product }) => {
   // Construct image URL from backend
-  const imageUrl = product.imageUrl || `http://localhost:5000/api/products/${product._id}/image`;
-  const [timeRemaining, setTimeRemaining] = useState('');
-  const [isActive, setIsActive] = useState(true);
-
-  // Calculate time remaining for bidding
-  useEffect(() => {
-    if (!product.bidding?.enabled || !product.bidding?.endTime) return;
-
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const endTime = new Date(product.bidding.endTime).getTime();
-      const difference = endTime - now;
-
-      if (difference <= 0) {
-        setTimeRemaining('Ended');
-        setIsActive(false);
-        return;
-      }
-
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      
-      if (days > 0) {
-        setTimeRemaining(`${days}d ${hours}h`);
-      } else {
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        setTimeRemaining(`${hours}h ${minutes}m`);
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, [product.bidding?.enabled, product.bidding?.endTime]);
+  const imageUrl = product.imageUrl || `${API_BASE}/api/products/${product._id}/image`;
 
   return (
     <Link to={`/product/${product._id}`}>
@@ -79,38 +45,17 @@ const ProductCard = ({ product }) => {
           <h3 className="mb-1 line-clamp-2 text-base font-bold text-slate-900 group-hover:text-emerald-600">
             {product.title}
           </h3>
-          
-          {product.bidding?.enabled ? (
-            <div className="space-y-1">
-              <div className="flex items-baseline gap-2">
-                <span className="text-xs font-medium text-slate-600">Current Bid:</span>
-                <p className="text-xl font-extrabold text-amber-600">
-                  ₹{product.bidding.currentBid || product.bidding.startingPrice || product.price}
-                </p>
-              </div>
-              {product.bidding.totalBids > 0 && (
-                <p className="text-xs text-slate-500">
-                  {product.bidding.totalBids} bid{product.bidding.totalBids !== 1 ? 's' : ''}
-                </p>
-              )}
-              {product.bidding.buyoutPrice && (
-                <p className="text-xs text-emerald-600 font-medium">
-                  ⚡ Buyout: ₹{product.bidding.buyoutPrice}
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-baseline gap-2">
-              <p className="text-xl font-extrabold text-emerald-600">
-                ₹{product.price}
+
+          <div className="flex items-baseline gap-2">
+            <p className="text-xl font-extrabold text-emerald-600">
+              ₹{product.price}
+            </p>
+            {product.originalPrice && (
+              <p className="text-sm text-slate-400 line-through">
+                ₹{product.originalPrice}
               </p>
-              {product.originalPrice && (
-                <p className="text-sm text-slate-400 line-through">
-                  ₹{product.originalPrice}
-                </p>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
             {product.category && (

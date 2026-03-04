@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../config/api.js';
 
 const PostAdPage = () => {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ const PostAdPage = () => {
         setError('Please select a valid image file');
         return;
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError('Image size should be less than 5MB');
@@ -56,7 +57,7 @@ const PostAdPage = () => {
       }
 
       setImage(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -122,7 +123,7 @@ const PostAdPage = () => {
 
       // Make API call with FormData
       const response = await axios.post(
-        'http://localhost:5000/api/listings',
+        `${API_BASE}/api/listings`,
         postData,
         {
           headers: {
@@ -133,7 +134,7 @@ const PostAdPage = () => {
       );
 
       console.log('Listing created:', response.data);
-      
+
       // Navigate to home page or listing details
       navigate('/');
     } catch (err) {
@@ -150,8 +151,8 @@ const PostAdPage = () => {
       <div className="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700"
           >
             ← Back to home

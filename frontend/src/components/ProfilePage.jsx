@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getToken, getUser, logout } from '../services/authService';
+import API_BASE from '../config/api.js';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -20,10 +21,10 @@ const ProfilePage = () => {
 
         // Fetch profile and listings in parallel for speed
         const [profileResponse, listingsResponse] = await Promise.all([
-          axios.get('http://localhost:5000/api/users/profile', {
+          axios.get(`${API_BASE}/api/users/profile`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('http://localhost:5000/api/users/listings', {
+          axios.get(`${API_BASE}/api/users/listings`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
         ]);
@@ -50,7 +51,7 @@ const ProfilePage = () => {
     setDeleting(listingId);
     try {
       const token = getToken();
-      await axios.delete(`http://localhost:5000/api/products/${listingId}`, {
+      await axios.delete(`${API_BASE}/api/products/${listingId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -215,7 +216,7 @@ const ProfilePage = () => {
                 >
                   {/* Image */}
                   <img
-                    src={listing.imageUrl || `http://localhost:5000/api/products/${listing._id}/image`}
+                    src={listing.imageUrl || `${API_BASE}/api/products/${listing._id}/image`}
                     alt={listing.title}
                     className="h-20 w-20 rounded-xl object-cover"
                     onError={(e) => {
