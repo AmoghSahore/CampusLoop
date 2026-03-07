@@ -18,7 +18,7 @@ Unlike generic platforms (OLX, Facebook), CampusLoop focuses on:
 * **🛒 Buy, Sell & Rent:** Categorized listings for academic and dorm essentials.
 * **💬 Real-time Chat:** Integrated messaging to negotiate prices and meetup spots.
 * **🌱 Green Credits:** Earn points for donating or recycling items; viewable on a Leaderboard.
-* **🔐 Secure Handoff:** Generate and scan QR codes to confirm transaction completion.
+* **🔐 Secure Handoff:** Generate and validate OTPs to confirm transaction completion.
 * **🔍 Lost & Found:** A dedicated section to report and find lost campus items.
 
 ---
