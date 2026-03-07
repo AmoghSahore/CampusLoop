@@ -3,7 +3,13 @@ import axios from "axios";
 import API_BASE from "../config/api.js";
 import ProductCard from "./ProductCard";
 
-const filters = ["All", "Free", "Rent", "Sale", "Auction"];
+// Listing type filters (bidding/auction disabled)
+const filters = [
+  { value: "ALL", label: "All items" },
+  { value: "DONATE", label: "Donations" },
+  { value: "RENT", label: "Rent" },
+  { value: "SELL", label: "Sell" },
+];
 
 // Sample products for testing
 const sampleProducts = [
@@ -106,10 +112,25 @@ const sampleProducts = [
 ];
 
 const Listings = ({ searchQuery = "", selectedCategory = "" }) => {
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] = useState("ALL");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Normalize type coming from API/sample into SELL/RENT/DONATE
+  const getNormalizedListingType = (item) => {
+    const rawType = (item.listingType || item.type || '').toString().trim().toUpperCase();
+    if (rawType === 'FREE' || rawType === 'DONATION' || rawType === 'DONATE') return 'DONATE';
+    if (rawType === 'SALE' || rawType === 'SELL') return 'SELL';
+    if (rawType === 'RENT') return 'RENT';
+    return rawType;
+  };
+
+  const normalizeCategory = (value) => {
+    const normalized = (value || '').toString().trim().toLowerCase();
+    if (normalized === 'other' || normalized === 'others') return 'other';
+    return normalized;
+  };
 
   // Fetch products from API
   useEffect(() => {
@@ -143,15 +164,9 @@ const Listings = ({ searchQuery = "", selectedCategory = "" }) => {
   const visibleListings = useMemo(() => {
     let filtered = products;
 
-    // Filter by type (Free, Rent, Sale, Auction)
-    if (activeFilter !== "All") {
-      if (activeFilter === "Auction") {
-        // Filter for auction/bidding items
-        filtered = filtered.filter((item) => item.bidding?.enabled === true);
-      } else {
-        // Filter for regular types
-        filtered = filtered.filter((item) => item.type === activeFilter);
-      }
+    // Filter by type (DONATE, RENT, SELL)
+    if (activeFilter !== "ALL") {
+      filtered = filtered.filter((item) => getNormalizedListingType(item) === activeFilter);
     }
 
     // Filter by search query
@@ -167,7 +182,7 @@ const Listings = ({ searchQuery = "", selectedCategory = "" }) => {
     // Filter by category
     if (selectedCategory) {
       filtered = filtered.filter((item) =>
-        item.category?.toLowerCase() === selectedCategory.toLowerCase()
+        normalizeCategory(item.category) === normalizeCategory(selectedCategory)
       );
     }
 
@@ -185,17 +200,17 @@ const Listings = ({ searchQuery = "", selectedCategory = "" }) => {
           </div>
           <div className="flex flex-wrap gap-2">
             {filters.map((filter) => {
-              const isActive = activeFilter === filter;
+              const isActive = activeFilter === filter.value;
               return (
                 <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
+                  key={filter.value}
+                  onClick={() => setActiveFilter(filter.value)}
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${isActive
                     ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
                     : "bg-white text-slate-700 ring-1 ring-slate-200 hover:ring-emerald-300"
                     }`}
                 >
-                  {filter === "All" ? "All items" : filter}
+                  {filter.label}
                 </button>
               );
             })}

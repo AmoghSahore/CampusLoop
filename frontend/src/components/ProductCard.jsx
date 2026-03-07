@@ -18,24 +18,10 @@ const ProductCard = ({ product }) => {
               e.target.src = 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80';
             }}
           />
-          {/* Bidding Badge */}
-          {product.bidding?.enabled ? (
-            <div className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
-              🔨 Auction
-            </div>
-          ) : product.condition && (
+          {/* Bidding/Auction badge disabled for now */}
+          {product.condition && (
             <div className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 backdrop-blur">
               {product.condition}
-            </div>
-          )}
-          {/* Time Remaining Badge for Active Auctions */}
-          {product.bidding?.enabled && timeRemaining && (
-            <div className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold backdrop-blur ${
-              isActive 
-                ? 'bg-emerald-500/90 text-white' 
-                : 'bg-slate-500/90 text-white'
-            }`}>
-              {timeRemaining}
             </div>
           )}
         </div>

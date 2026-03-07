@@ -133,7 +133,7 @@ const Signup = () => {
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                   required
                 />
-                <span className="text-xs text-slate-500">Use your official university email address</span>
+                <span className="block text-xs text-slate-500">Use your official university email address</span>
               </label>
 
               <label className="space-y-2">

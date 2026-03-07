@@ -60,6 +60,7 @@ export const signup = async (req, res) => {
         // so we map fullName → name and silently ignore university
         // (schema is frozen and university can be added later if needed)
         const { fullName, email, password, confirmPassword } = req.body;
+        const normalizedEmail = (email || '').toLowerCase().trim();
 
         if (!fullName || !email || !password || !confirmPassword) {
             return res.status(400).json({ message: 'All fields are required' });
@@ -67,8 +68,18 @@ export const signup = async (req, res) => {
 
         // Basic email format check
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        if (!emailRegex.test(normalizedEmail)) {
             return res.status(400).json({ message: 'Invalid email address' });
+        }
+
+        // Christ University-only restriction:
+        // allows both formats like:
+        //   user@christuniversity.in
+        //   user@mca.christuniversity.in
+        if (!normalizedEmail.endsWith('christuniversity.in')) {
+            return res.status(400).json({
+                message: 'Only Christ University email addresses are allowed (must end with christuniversity.in)',
+            });
         }
 
         if (password.length < 6) {
@@ -85,7 +96,7 @@ export const signup = async (req, res) => {
         // which automatically prevent SQL injection — always use this
         const [existing] = await pool.execute(
             'SELECT user_id FROM users WHERE email = ?',
-            [email.toLowerCase().trim()]
+            [normalizedEmail]
         );
 
         if (existing.length > 0) {
@@ -105,7 +116,7 @@ export const signup = async (req, res) => {
         const [result] = await pool.execute(
             `INSERT INTO users (name, email, password_hash)
        VALUES (?, ?, ?)`,
-            [fullName.trim(), email.toLowerCase().trim(), password_hash]
+            [fullName.trim(), normalizedEmail, password_hash]
         );
 
         // result.insertId gives us the auto-incremented user_id MySQL assigned

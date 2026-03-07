@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { uploadToCloudinary } from '../config/cloudinary.js';
 
 // ─────────────────────────────────────────────────────────────
 // GET /api/products
@@ -147,6 +148,36 @@ export const getProductById = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────
+// GET /api/products/:id/image
+// ─────────────────────────────────────────────────────────────
+// Redirects to the primary image URL for a product.
+// This preserves compatibility with frontend code that expects
+// an image endpoint per product.
+export const getProductPrimaryImage = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [rows] = await pool.execute(
+            `SELECT image_url
+       FROM product_images
+       WHERE product_id = ?
+       ORDER BY image_id ASC
+       LIMIT 1`,
+            [id]
+        );
+
+        if (rows.length === 0 || !rows[0].image_url) {
+            return res.status(404).json({ message: 'Image not found' });
+        }
+
+        return res.redirect(rows[0].image_url);
+    } catch (err) {
+        console.error('Get product image error:', err);
+        return res.status(500).json({ message: 'Server error fetching product image' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
 // POST /api/listings  (auth required)
 // ─────────────────────────────────────────────────────────────
 // Creates a new product listing. The frontend sends multipart/form-data
@@ -158,7 +189,7 @@ export const createListing = async (req, res) => {
         const sellerId = req.user.userId; // from JWT — we know who's posting
 
         // Server-side validation
-        if (!title || !category || !price || !description) {
+        if (!title || !category || !description) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
@@ -169,18 +200,29 @@ export const createListing = async (req, res) => {
             return res.status(400).json({ message: 'Invalid listing type' });
         }
 
+        // Price is required for SELL/RENT, optional (forced to 0) for DONATE
+        if (dbListingType !== 'DONATE') {
+            const parsedPrice = parseFloat(price);
+            if (price === undefined || price === null || price === '' || Number.isNaN(parsedPrice) || parsedPrice < 0) {
+                return res.status(400).json({ message: 'Valid price is required for Sell or Rent listings' });
+            }
+        }
+
+        const finalPrice = dbListingType === 'DONATE' ? 0 : parseFloat(price);
+
         // Insert the product row (image is optional for now)
         const [result] = await pool.execute(
             `INSERT INTO products (seller_id, title, description, category, price, listing_type)
        VALUES (?, ?, ?, ?, ?, ?)`,
-            [sellerId, title.trim(), description.trim(), category, parseFloat(price), dbListingType]
+            [sellerId, title.trim(), description.trim(), category, finalPrice, dbListingType]
         );
 
         const newProductId = result.insertId;
 
         // Only store an image if one was actually uploaded
         if (req.file) {
-            const imageUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`;
+            const cloudinaryResult = await uploadToCloudinary(req.file, 'campusloop/products');
+            const imageUrl = cloudinaryResult.secure_url;
             await pool.execute(
                 'INSERT INTO product_images (product_id, image_url) VALUES (?, ?)',
                 [newProductId, imageUrl]

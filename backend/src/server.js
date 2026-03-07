@@ -8,6 +8,8 @@ import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
 import userRoutes from './routes/users.js';
 import chatRoutes from './routes/chats.js';
+import uploadRoutes from './routes/upload.js';
+import messageRoutes from './routes/messages.js';
 
 dotenv.config();
 
@@ -32,6 +34,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api', productRoutes);   // /api/products  +  /api/listings
 app.use('/api/users', userRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api', uploadRoutes);    // /api/upload-image
+app.use('/api/messages', messageRoutes);
 
 // ── 404 catch-all ────────────────────────────────────────────
 app.use((_req, res) => {

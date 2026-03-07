@@ -6,13 +6,19 @@ const categories = [
   { title: "Lab Equipment", count: "127 items", icon: "🧪", color: "bg-teal-50 text-teal-700 ring-teal-200" },
   { title: "Furniture", count: "95 items", icon: "🛋️", color: "bg-amber-50 text-amber-700 ring-amber-200" },
   { title: "Clothing", count: "211 items", icon: "👟", color: "bg-pink-50 text-pink-700 ring-pink-200" },
-  { title: "Other", count: "78 items", icon: "🛠️", color: "bg-lime-50 text-lime-700 ring-lime-200" },
+  { title: "Others", count: "78 items", icon: "🛠️", color: "bg-lime-50 text-lime-700 ring-lime-200" },
 ];
 
 const Categories = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const selectedCategory = searchParams.get('category') || '';
+
+  const normalizeCategory = (value) => {
+    const normalized = (value || '').toString().trim().toLowerCase();
+    if (normalized === 'other' || normalized === 'others') return 'other';
+    return normalized;
+  };
 
   const handleCategoryClick = (categoryTitle) => {
     if (selectedCategory === categoryTitle) {
@@ -39,7 +45,7 @@ const Categories = () => {
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => {
-            const isSelected = selectedCategory === category.title;
+            const isSelected = normalizeCategory(selectedCategory) === normalizeCategory(category.title);
             return (
               <button
                 key={category.title}
