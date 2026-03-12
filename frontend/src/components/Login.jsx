@@ -1,145 +1,147 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Mail, Lock, ArrowRight, Recycle, Leaf, ShieldCheck, Zap, Eye, EyeOff } from 'lucide-react';
 import API_BASE from '../config/api.js';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
+  const [form,    setForm]    = useState({ email:'', password:'' });
   const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState('');
+  const [showPw,  setShowPw]  = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
+    setLoading(true); setError('');
     try {
-      const response = await axios.post(`${API_BASE}/api/auth/login`, {
-        email: formData.email,
-        password: formData.password,
-      });
-
-      // Store token and user in localStorage so other pages can access them
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-
-      // Tell the Navbar to re-check auth state immediately
+      const r = await axios.post(`${API_BASE}/api/auth/login`, form);
+      localStorage.setItem('token', r.data.token);
+      localStorage.setItem('user', JSON.stringify(r.data.user));
       window.dispatchEvent(new Event('authChange'));
-
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-      setLoading(false);
-    }
+      setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+    } finally { setLoading(false); }
   };
 
+  const features = [
+    { icon: ShieldCheck, text: 'Verified student accounts only' },
+    { icon: Zap,         text: 'Instant chat with sellers'      },
+    { icon: Leaf,        text: 'Promote campus sustainability'   },
+  ];
+
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.2)_0,_transparent_45%),radial-gradient(circle_at_20%_20%,_rgba(59,130,246,0.2)_0,_transparent_35%)] opacity-60" aria-hidden />
+    <div className="flex min-h-screen">
+      {/* Left panel – brand */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden"
+        style={{ background: 'var(--grad-hero)' }}>
+        <div className="absolute inset-0 bg-dot-grid opacity-20 pointer-events-none" />
+        <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full blur-3xl opacity-25"
+          style={{ background: 'radial-gradient(circle,#1d9a6c,transparent)' }} />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full blur-3xl opacity-20"
+          style={{ background: 'radial-gradient(circle,#f59e0b,transparent)' }} />
 
-      <div className="relative mx-auto flex min-h-screen max-w-6xl items-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid w-full gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
-              ♻ CampusLoop
-            </div>
-            <h1 className="text-4xl font-extrabold text-slate-900 sm:text-5xl">
-              Welcome back.
-              <span className="block text-emerald-600">Trade smarter, waste less.</span>
-            </h1>
-            <p className="max-w-xl text-lg text-slate-600">
-              Sign in to see the latest listings, chat with sellers, and keep your wishlist in sync across devices.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-                <p className="text-sm font-semibold text-slate-900">Safe handoffs</p>
-                <p className="text-sm text-slate-500">Meet in verified campus zones.</p>
-              </div>
-              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-                <p className="text-sm font-semibold text-slate-900">Zero platform fees</p>
-                <p className="text-sm text-slate-500">Students help students.</p>
-              </div>
-            </div>
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl"
+            style={{ background:'var(--grad-primary)', boxShadow:'0 2px 12px var(--primary-glow)' }}>
+            <Recycle className="h-5 w-5 text-white" />
           </div>
+          <span className="text-xl font-bold text-white">Campus<span style={{ background:'linear-gradient(135deg,#4ade80,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Loop</span></span>
+        </div>
 
-          <div className="glass-card w-full max-w-xl border border-white/70 bg-white/90 p-8 shadow-2xl ring-1 ring-slate-200">
-            <div className="mb-6 text-center">
-              <div className="text-2xl font-extrabold text-emerald-700">Sign in</div>
-              <p className="text-sm text-slate-500">Use your university email to continue</p>
-            </div>
-
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              {error && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-                  {error}
-                </div>
-              )}
-
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-800">University email</span>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  placeholder="your.name@university.edu"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                  required
-                />
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-800">Password</span>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                  required
-                />
-              </label>
-
-              <div className="flex items-center justify-between text-sm text-slate-600">
-                <label className="inline-flex items-center gap-2">
-                  <input type="checkbox" className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
-                  <span>Remember me</span>
-                </label>
-                <Link to="/forgot-password" className="font-semibold text-emerald-700 hover:text-emerald-600">
-                  Forgot password?
-                </Link>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 to-cyan-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/60 disabled:cursor-not-allowed disabled:opacity-80"
-              >
-                {loading ? "Signing in..." : "Sign in"}
-              </button>
-            </form>
-
-            <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-center text-sm text-slate-600 ring-1 ring-slate-100">
-              New to CampusLoop?{' '}
-              <Link to="/signup" className="font-semibold text-emerald-700 hover:text-emerald-600">
-                Create an account
-              </Link>
-            </div>
+        <div className="relative space-y-8">
+          <div>
+            <h2 className="text-3xl font-extrabold leading-tight text-white">
+              Welcome back to<br />your campus community.
+            </h2>
+            <p className="mt-3 text-white/55">Trade smarter. Waste less. Connect more.</p>
           </div>
+          <ul className="space-y-4">
+            {features.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+                  <Icon className="h-4 w-4 text-emerald-400" />
+                </span>
+                <span className="text-sm text-white/70">{text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative text-xs text-white/25">© 2026 CampusLoop</p>
+      </div>
+
+      {/* Right panel – form */}
+      <div className="flex flex-1 items-center justify-center bg-[var(--bg)] px-6 py-12">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <Link to="/" className="mb-8 flex items-center gap-2.5 lg:hidden">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background:'var(--grad-primary)' }}>
+              <Recycle className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-[var(--fg)]">Campus<span className="text-gradient">Loop</span></span>
+          </Link>
+
+          <h1 className="text-2xl font-extrabold text-[var(--fg)]">Sign in</h1>
+          <p className="mt-1 text-sm text-[var(--fg-muted)]">
+            New here?{' '}
+            <Link to="/signup" className="font-semibold text-[var(--primary)] hover:underline">Create an account</Link>
+          </p>
+
+          {error && (
+            <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            {/* Email */}
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-[var(--fg)]">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                <input type="email" name="email" required autoComplete="email"
+                  value={form.email} onChange={handleChange}
+                  placeholder="you@college.edu"
+                  className="input-base pl-10" />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-sm font-semibold text-[var(--fg)]">Password</label>
+                <button type="button" className="text-xs font-medium text-[var(--primary)] hover:underline">Forgot password?</button>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                <input type={showPw ? 'text' : 'password'} name="password" required autoComplete="current-password"
+                  value={form.password} onChange={handleChange}
+                  placeholder="••••••••"
+                  className="input-base pl-10 pr-10" />
+                <button type="button" onClick={() => setShowPw(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle)] hover:text-[var(--fg)] transition-colors">
+                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" disabled={loading}
+              className="btn-primary w-full justify-center py-3 text-base gap-2 mt-2">
+              {loading ? <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : null}
+              {loading ? 'Signing in…' : 'Sign in'}
+              {!loading && <ArrowRight size={16} />}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-xs text-[var(--fg-subtle)]">
+            By signing in you agree to our{' '}
+            <a href="#" className="text-[var(--primary)] hover:underline">Terms</a> and{' '}
+            <a href="#" className="text-[var(--primary)] hover:underline">Privacy Policy</a>
+          </p>
         </div>
       </div>
     </div>

@@ -1,333 +1,201 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { UploadCloud, Lightbulb, Tag, ArrowRight, X } from 'lucide-react';
 import API_BASE from '../config/api.js';
+import { getToken } from '../services/authService.js';
+
+const CATEGORIES = ['Books','Electronics','Furniture','Clothing','Sports','Services','Other'];
+const TYPES      = ['sell','free','lend'];
+const TIPS = [
+  'Upload 3–4 clear photos for 2× more responses.',
+  'Set a fair price by checking similar listings.',
+  'Describe condition honestly — earns better reviews.',
+  'Use "Free" type to give away items quickly.',
+];
 
 const PostAdPage = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    title: '',
-    category: '',
-    listingType: 'SELL',
-    price: '',
-    description: ''
-  });
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ title:'', description:'', price:'', category:'', type:'sell' });
+  const [images,   setImages]   = useState([]);
+  const [previews, setPreviews] = useState([]);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
 
-  // Bidding-related state intentionally disabled for current release
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-  const categories = [
-    'Textbooks',
-    'Electronics',
-    'Lab Equipment',
-    'Furniture',
-    'Clothing',
-    'Sports & Fitness',
-    'Stationery',
-    'Musical Instruments',
-    'Other'
-  ];
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  const handleFiles = (e) => {
+    const files = Array.from(e.target.files || []);
+    const valid = files.slice(0, 5);
+    setImages(valid);
+    setPreviews(valid.map(f => URL.createObjectURL(f)));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file');
-        return;
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image size should be less than 5MB');
-        return;
-      }
-
-      setImage(file);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-      setError('');
-    }
+  const removeImage = (idx) => {
+    setImages(prev => prev.filter((_,i)=>i!==idx));
+    setPreviews(prev => prev.filter((_,i)=>i!==idx));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    // Validation
-    if (!formData.title || !formData.category || !formData.description) {
-      setError('Please fill in all required fields');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.listingType !== 'DONATE' && !formData.price) {
-      setError('Please enter a price for Sell or Rent listings');
-      setLoading(false);
-      return;
-    }
-
-    if (!image) {
-      setError('Please upload an image');
-      setLoading(false);
-      return;
-    }
-
-    // Bidding validation disabled for current release
-
+    if (!form.category) { setError('Please select a category.'); return; }
+    setLoading(true); setError('');
     try {
-      // Create FormData object for file upload
-      const postData = new FormData();
-      postData.append('title', formData.title);
-      postData.append('category', formData.category);
-      postData.append('listingType', formData.listingType);
-      postData.append('price', formData.listingType === 'DONATE' ? '0' : formData.price);
-      postData.append('description', formData.description);
-      postData.append('image', image);
-
-      // Bidding payload fields disabled for current release
-
-      // Get token from localStorage for authentication
-      const token = localStorage.getItem('token');
-
-      // Make API call with FormData
-      const response = await axios.post(
-        `${API_BASE}/api/listings`,
-        postData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      console.log('Listing created:', response.data);
-
-      // Navigate to home page or listing details
-      navigate('/');
+      const fd = new FormData();
+      Object.entries(form).forEach(([k,v]) => fd.append(k, v));
+      images.forEach(img => fd.append('images', img));
+      await axios.post(`${API_BASE}/api/products`, fd, {
+        headers: { Authorization:`Bearer ${getToken()}`, 'Content-Type':'multipart/form-data' },
+      });
+      navigate('/listings');
     } catch (err) {
-      console.error('Error creating listing:', err);
-      setError(err.response?.data?.message || 'Failed to create listing. Please try again.');
-      setLoading(false);
-    }
+      setError(err.response?.data?.message || 'Failed to post. Please try again.');
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.2)_0,_transparent_45%),radial-gradient(circle_at_20%_20%,_rgba(59,130,246,0.2)_0,_transparent_35%)] opacity-60" aria-hidden />
-
-      <div className="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-20 pb-16" style={{ background:'linear-gradient(180deg,var(--bg) 0%,#edf7f0 100%)' }}>
+      <div className="mx-auto max-w-5xl px-4">
         {/* Header */}
-        <div className="mb-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700"
-          >
-            ← Back to home
-          </Link>
-          <h1 className="mt-4 text-4xl font-extrabold text-slate-900">
-            List your item
-            <span className="block text-emerald-600">Reach thousands of students</span>
-          </h1>
-          <p className="mt-2 text-lg text-slate-600">
-            Fill in the details below to create your listing
-          </p>
+        <div className="mb-8 text-center">
+          <span className="section-eyebrow">Post an ad</span>
+          <h1 className="mt-3 text-3xl font-extrabold text-[var(--fg)]">List your item</h1>
+          <p className="mt-2 text-[var(--fg-muted)]">Sell, share or lend — fill in a few details and go live instantly.</p>
         </div>
 
-        {/* Form Card */}
-        <div className="glass-card border border-white/70 bg-white/90 p-8 shadow-2xl ring-1 ring-slate-200">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-                {error}
-              </div>
-            )}
+        {error && (
+          <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 max-w-3xl mx-auto">
+            {error}
+          </div>
+        )}
 
-            {/* Title */}
-            <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-semibold text-slate-800">
-                Title <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                placeholder="e.g., Introduction to Algorithms Textbook"
-                value={formData.title}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                required
-              />
-            </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* ── Form ────────────────────────────────────────────────── */}
+          <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-5">
+            {/* Image upload zone */}
+            <div className="card overflow-hidden">
+              <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-[var(--fg-subtle)]">Photos</h2>
 
-            {/* Category */}
-            <div className="space-y-2">
-              <label htmlFor="category" className="text-sm font-semibold text-slate-800">
-                Category <span className="text-rose-500">*</span>
-              </label>
-              <select
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                required
-              >
-                <option value="">Select a category</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Price */}
-            <div className="space-y-2">
-              <label htmlFor="listingType" className="text-sm font-semibold text-slate-800">
-                Listing Type <span className="text-rose-500">*</span>
-              </label>
-              <select
-                id="listingType"
-                name="listingType"
-                value={formData.listingType}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                required
-              >
-                <option value="SELL">Sell</option>
-                <option value="RENT">Rent</option>
-                <option value="DONATE">Donate</option>
-              </select>
-            </div>
-
-            {/* Price (not required for DONATE) */}
-            {formData.listingType !== 'DONATE' ? (
-              <div className="space-y-2">
-                <label htmlFor="price" className="text-sm font-semibold text-slate-800">
-                  Price <span className="text-rose-500">*</span>
+              {previews.length > 0 ? (
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
+                  {previews.map((src, i) => (
+                    <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-[var(--border)]">
+                      <img src={src} alt="" className="h-full w-full object-cover transition group-hover:scale-105" />
+                      <button type="button" onClick={()=>removeImage(i)}
+                        className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition">
+                        <X size={11}/>
+                      </button>
+                    </div>
+                  ))}
+                  {previews.length < 5 && (
+                    <label className="aspect-square flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--primary)]/30 bg-[var(--bg-alt)] hover:border-[var(--primary)]/60 hover:bg-emerald-50 transition">
+                      <UploadCloud size={20} className="text-[var(--primary)]/60"/>
+                      <span className="mt-1 text-[10px] text-[var(--fg-subtle)]">Add more</span>
+                      <input type="file" accept="image/*" multiple className="hidden" onChange={handleFiles}/>
+                    </label>
+                  )}
+                </div>
+              ) : (
+                <label className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-[var(--primary)]/30 bg-[var(--bg-alt)] p-10 text-center hover:border-[var(--primary)]/60 hover:bg-emerald-50 transition group">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl transition group-hover:scale-110"
+                    style={{ background:'var(--grad-primary)', boxShadow:'0 4px 20px var(--primary-glow)' }}>
+                    <UploadCloud className="h-6 w-6 text-white"/>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[var(--fg)]">Drop images here or click to browse</p>
+                    <p className="mt-0.5 text-xs text-[var(--fg-subtle)]">Up to 5 images · JPG, PNG, WEBP</p>
+                  </div>
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleFiles}/>
                 </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-600">₹</span>
-                  <input
-                    type="number"
-                    id="price"
-                    name="price"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pl-8 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                    required={formData.listingType !== 'DONATE'}
-                  />
+              )}
+            </div>
+
+            {/* Details */}
+            <div className="card space-y-5">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-[var(--fg-subtle)]">Details</h2>
+
+              {/* Title */}
+              <div>
+                <label className="label">Title</label>
+                <input type="text" name="title" required value={form.title} onChange={handleChange}
+                  placeholder="e.g. Calculus textbook 3rd edition"
+                  className="input-base" />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="label">Description</label>
+                <textarea name="description" rows={4} value={form.description} onChange={handleChange}
+                  placeholder="Describe condition, extras included, pickup location…"
+                  className="input-base resize-none leading-relaxed" />
+              </div>
+
+              {/* Category + Type row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Category</label>
+                  <select name="category" required value={form.category} onChange={handleChange} className="input-base">
+                    <option value="">Select…</option>
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Type</label>
+                  <select name="type" value={form.type} onChange={handleChange} className="input-base">
+                    {TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
+                  </select>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                This listing is marked as <strong>Donate</strong>. Price is not required.
-              </div>
-            )}
 
-            {/* Bidding/Auction options temporarily disabled */}
-
-            {/* Description */}
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-semibold text-slate-800">
-                Description <span className="text-rose-500">*</span>
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                placeholder="Describe your item's condition, features, and any other relevant details..."
-                rows="5"
-                value={formData.description}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                required
-              />
-            </div>
-
-            {/* Image Upload */}
-            <div className="space-y-2">
-              <label htmlFor="image" className="text-sm font-semibold text-slate-800">
-                Upload Image <span className="text-rose-500">*</span>
-              </label>
-              <div className="space-y-4">
-                <input
-                  type="file"
-                  id="image"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner file:mr-4 file:rounded-full file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emerald-700 hover:file:bg-emerald-100 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                  required
-                />
-                {imagePreview && (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="mb-2 text-sm font-semibold text-slate-700">Image Preview:</p>
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="h-48 w-full rounded-xl object-cover"
-                    />
+              {/* Price */}
+              {form.type !== 'free' && (
+                <div>
+                  <label className="label">Price (₹)</label>
+                  <div className="relative">
+                    <Tag className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                    <input type="number" name="price" min="0" value={form.price} onChange={handleChange}
+                      placeholder="0"
+                      className="input-base pl-10" />
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
-            {/* Submit Button */}
-            <div className="flex gap-4 pt-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 rounded-full bg-gradient-to-r from-emerald-600 to-cyan-500 px-6 py-3 text-base font-semibold text-white shadow-glow transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
-              >
-                {loading ? 'Creating listing...' : 'Post listing'}
-              </button>
-              <Link
-                to="/"
-                className="rounded-full border border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/60"
-              >
-                Cancel
-              </Link>
-            </div>
+            <button type="submit" disabled={loading}
+              className="btn-primary w-full justify-center py-3 text-base gap-2">
+              {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin"/>}
+              {loading ? 'Publishing…' : 'Publish listing'}
+              {!loading && <ArrowRight size={16}/>}
+            </button>
           </form>
-        </div>
 
-        {/* Tips Section */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <div className="mb-2 text-2xl">📸</div>
-            <p className="text-sm font-semibold text-slate-900">Clear photos</p>
-            <p className="text-sm text-slate-500">Use good lighting for better visibility</p>
-          </div>
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <div className="mb-2 text-2xl">💰</div>
-            <p className="text-sm font-semibold text-slate-900">Fair pricing</p>
-            <p className="text-sm text-slate-500">Check similar listings first</p>
-          </div>
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <div className="mb-2 text-2xl">✍️</div>
-            <p className="text-sm font-semibold text-slate-900">Detailed description</p>
-            <p className="text-sm text-slate-500">Include condition and features</p>
-          </div>
+          {/* ── Tips sidebar ────────────────────────────────────────── */}
+          <aside className="space-y-4 lg:sticky lg:top-24 self-start">
+            <div className="card">
+              <div className="mb-4 flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg"
+                  style={{ background:'var(--grad-primary)', boxShadow:'0 2px 8px var(--primary-glow)' }}>
+                  <Lightbulb className="h-4 w-4 text-white"/>
+                </div>
+                <h3 className="font-bold text-[var(--fg)]">Tips for selling faster</h3>
+              </div>
+              <ul className="space-y-3">
+                {TIPS.map((t,i) => (
+                  <li key={i} className="flex gap-2 text-sm text-[var(--fg-muted)]">
+                    <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                      style={{ background:'var(--bg-alt)', color:'var(--primary)' }}>{i+1}</span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--border)] p-4 text-center"
+              style={{ background:'linear-gradient(135deg,#eefbf4,#f0fdf4)' }}>
+              <p className="text-xs font-semibold text-[var(--primary)]">🌿 Eco Impact</p>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">Every listing rehomed saves ~1.2kg of waste from landfill.</p>
+            </div>
+          </aside>
         </div>
       </div>
     </div>

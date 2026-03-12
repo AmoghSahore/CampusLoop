@@ -1,71 +1,55 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { BookOpen, Laptop, FlaskConical, Armchair, Shirt, Package } from 'lucide-react';
 
 const categories = [
-  { title: "Textbooks", count: "342 items", icon: "📘", color: "bg-sky-50 text-sky-700 ring-sky-200" },
-  { title: "Electronics", count: "189 items", icon: "💻", color: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
-  { title: "Lab Equipment", count: "127 items", icon: "🧪", color: "bg-teal-50 text-teal-700 ring-teal-200" },
-  { title: "Furniture", count: "95 items", icon: "🛋️", color: "bg-amber-50 text-amber-700 ring-amber-200" },
-  { title: "Clothing", count: "211 items", icon: "👟", color: "bg-pink-50 text-pink-700 ring-pink-200" },
-  { title: "Others", count: "78 items", icon: "🛠️", color: "bg-lime-50 text-lime-700 ring-lime-200" },
+  { title:'Textbooks',     count:342, icon:BookOpen,    grad:'linear-gradient(135deg,#bfdbfe,#93c5fd)', textColor:'#1d4ed8' },
+  { title:'Electronics',   count:189, icon:Laptop,      grad:'linear-gradient(135deg,#c7d2fe,#a5b4fc)', textColor:'#4338ca' },
+  { title:'Lab Equipment', count:127, icon:FlaskConical, grad:'linear-gradient(135deg,#99f6e4,#5eead4)', textColor:'#0f766e' },
+  { title:'Furniture',     count:95,  icon:Armchair,    grad:'linear-gradient(135deg,#fde68a,#fcd34d)', textColor:'#92400e' },
+  { title:'Clothing',      count:211, icon:Shirt,       grad:'linear-gradient(135deg,#fbcfe8,#f9a8d4)', textColor:'#9d174d' },
+  { title:'Others',        count:78,  icon:Package,     grad:'linear-gradient(135deg,#d9f99d,#bbf7d0)', textColor:'#166534' },
 ];
 
 const Categories = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const selectedCategory = searchParams.get('category') || '';
-
-  const normalizeCategory = (value) => {
-    const normalized = (value || '').toString().trim().toLowerCase();
-    if (normalized === 'other' || normalized === 'others') return 'other';
-    return normalized;
-  };
-
-  const handleCategoryClick = (categoryTitle) => {
-    if (selectedCategory === categoryTitle) {
-      // If already selected, clear the filter
-      navigate('/');
-    } else {
-      // Navigate with category parameter
-      navigate(`/?category=${encodeURIComponent(categoryTitle)}`);
-    }
-  };
+  const selected = searchParams.get('category') || '';
+  const normalize = v => { const s=(v||'').toLowerCase().trim(); return s==='others'||s==='other'?'other':s; };
+  const handleClick = t => navigate(selected===t ? '/' : `/?category=${encodeURIComponent(t)}`);
 
   return (
-    <section className="bg-white py-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="rounded-full bg-emerald-50 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-100">
-            Categories
-          </span>
-          <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Browse by need</h2>
-          <p className="max-w-2xl text-lg text-slate-600">
-            Find what you need or list what you do not. Everything stays on campus for fast handoffs.
+    <section id="categories" className="relative section-pad bg-[var(--bg)]">
+      {/* Subtle dot grid */}
+      <div className="absolute inset-0 bg-dot-grid pointer-events-none opacity-60" aria-hidden />
+      <div className="container-xl relative">
+        <div className="mb-14 text-center">
+          <span className="section-eyebrow">Browse by category</span>
+          <h2 className="mt-4 text-3xl font-extrabold text-[var(--fg)] sm:text-4xl">Find exactly what you need</h2>
+          <p className="mx-auto mt-3 max-w-xl text-[var(--fg-muted)]">
+            From day-one textbooks to final-year furniture — everything stays on campus for fast handoffs.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => {
-            const isSelected = normalizeCategory(selectedCategory) === normalizeCategory(category.title);
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {categories.map((cat) => {
+            const isSelected = normalize(selected) === normalize(cat.title);
+            const Icon = cat.icon;
             return (
-              <button
-                key={category.title}
-                onClick={() => handleCategoryClick(category.title)}
-                className={`group rounded-3xl border p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg text-left w-full ${
-                  isSelected
-                    ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-400'
-                    : 'border-slate-100 bg-slate-50/60'
-                }`}
-              >
-                <div className={`mb-4 inline-flex rounded-2xl px-4 py-3 text-2xl ring-1 ${category.color}`}>
-                  {category.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900">{category.title}</h3>
-                <p className="text-sm text-slate-500">{category.count}</p>
-                <div className={`mt-4 flex items-center gap-2 text-sm font-semibold text-emerald-700 transition ${
-                  isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+              <button key={cat.title} onClick={() => handleClick(cat.title)}
+                className={`group glass-card flex flex-col items-center gap-3 p-5 text-center transition-all duration-200 hover:-translate-y-1.5 ${
+                  isSelected ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] bg-[var(--primary-light)]' : 'hover:border-[var(--primary)]/60'
                 }`}>
-                  {isSelected ? '✓ Selected' : 'Explore items'} <span aria-hidden>{isSelected ? '' : '→'}</span>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+                  style={{ background: cat.grad }}>
+                  <Icon className="h-6 w-6" style={{ color: cat.textColor }} />
                 </div>
+                <div>
+                  <p className={`text-sm font-bold ${isSelected ? 'text-[var(--primary)]' : 'text-[var(--fg)]'}`}>{cat.title}</p>
+                  <p className="mt-0.5 text-xs text-[var(--fg-muted)]">{cat.count} items</p>
+                </div>
+                {isSelected && (
+                  <span className="mt-0.5 text-xs font-semibold text-[var(--primary)]">✓ Active</span>
+                )}
               </button>
             );
           })}
@@ -76,4 +60,3 @@ const Categories = () => {
 };
 
 export default Categories;
-

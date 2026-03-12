@@ -1,101 +1,165 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { isAuthenticated, logout, getUser } from '../services/authService';
+import { Search, Menu, X, Recycle, MessageSquare, User, Plus, Heart } from 'lucide-react';
+import { getWishlist } from '../utils/wishlist.js';
 
 const Navbar = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
+  const [searchQuery,   setSearchQuery]   = useState('');
+  const [isMenuOpen,    setIsMenuOpen]    = useState(false);
+  const [isScrolled,    setIsScrolled]    = useState(false);
+  const [isLoggedIn,    setIsLoggedIn]    = useState(!!localStorage.getItem('token'));
+  const [wishlistCount, setWishlistCount] = useState(() => getWishlist().length);
   const navigate = useNavigate();
 
-  // Check if the user is logged in by reading the token from localStorage.
-  // We use useState so the component re-renders when auth changes.
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
-
-  // Listen for storage changes — this handles the case where the user logs in
-  // in another tab, or when we manually dispatch a 'storage' event after login/logout
   useEffect(() => {
     const syncAuth = () => setIsLoggedIn(!!localStorage.getItem('token'));
-    window.addEventListener('storage', syncAuth);
-    // Also listen for a custom event we'll fire from within the same tab
+    window.addEventListener('storage',    syncAuth);
     window.addEventListener('authChange', syncAuth);
-    return () => {
-      window.removeEventListener('storage', syncAuth);
-      window.removeEventListener('authChange', syncAuth);
-    };
+    return () => { window.removeEventListener('storage', syncAuth); window.removeEventListener('authChange', syncAuth); };
+  }, []);
+
+  useEffect(() => {
+    const sync = () => setWishlistCount(getWishlist().length);
+    window.addEventListener('wishlistChange', sync);
+    return () => window.removeEventListener('wishlistChange', sync);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') setIsMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+      setIsMenuOpen(false);
     }
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-200">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-4">
+    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+      isScrolled
+        ? 'bg-white/90 backdrop-blur-xl shadow-[0_1px_20px_rgba(0,0,0,0.08)] border-b border-[var(--border)]'
+        : 'bg-white/70 backdrop-blur-md border-b border-[var(--border)]/60'
+    }`}>
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
         {/* Logo */}
-        <div className="flex items-center gap-2 text-2xl font-extrabold text-emerald-700">
-          <span className="text-3xl">♻</span>
-          <Link to="/">
-            <span>Campus<span className="text-emerald-500">Loop</span></span>
-          </Link>
-        </div>
+        <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105"
+            style={{ background: 'var(--grad-primary)', boxShadow: '0 2px 10px var(--primary-glow)' }}>
+            <Recycle className="h-5 w-5 text-white" strokeWidth={2.2} />
+          </div>
+          <span className="text-lg font-bold tracking-tight text-[var(--fg)]">
+            Campus<span className="text-gradient">Loop</span>
+          </span>
+        </Link>
 
-        {/* Search bar */}
-        <div className="hidden flex-1 md:flex">
-          <form onSubmit={handleSearch} className="relative w-full">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-400">🔍</span>
+        {/* Search */}
+        <div className="hidden flex-1 max-w-sm mx-6 lg:block">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)] pointer-events-none" />
             <input
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for textbooks, electronics, lab gear..."
-              className="w-full rounded-full border border-slate-200 bg-slate-50/70 px-4 py-2.5 pl-11 text-sm text-slate-700 shadow-inner transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30"
+              placeholder="Search textbooks, electronics, gear…"
+              className="w-full rounded-full border border-[var(--border)] bg-[var(--bg)] py-2 pl-10 pr-4 text-sm text-[var(--fg)]
+                         placeholder:text-[var(--fg-subtle)] focus:border-[var(--primary)] focus:outline-none
+                         focus:ring-2 focus:ring-[var(--primary)]/12 transition-all hover:border-[var(--border-strong)]"
             />
           </form>
         </div>
 
-        {/* Right side — differs based on auth state */}
-        <div className="flex items-center gap-2 md:gap-3">
+        {/* Nav – desktop */}
+        <nav className="hidden items-center gap-0.5 md:flex">
+          <Link to="/#categories" className="btn-ghost text-sm">Categories</Link>
+          <Link to="/#listings"   className="btn-ghost text-sm">Listings</Link>
+
+          <div className="mx-2.5 h-5 w-px bg-[var(--border)]" />
+
+          {/* Wishlist badge */}
+          <Link to="/#listings" title="Wishlist"
+            className={`relative flex h-9 w-9 items-center justify-center rounded-xl border transition-all
+              ${wishlistCount > 0
+                ? 'border-rose-200 bg-rose-50 text-rose-500'
+                : 'border-[var(--border)] bg-white text-[var(--fg-muted)] hover:border-rose-300 hover:text-rose-500'}`}>
+            <Heart size={16} fill={wishlistCount > 0 ? 'currentColor' : 'none'} />
+            {wishlistCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                {wishlistCount > 9 ? '9+' : wishlistCount}
+              </span>
+            )}
+          </Link>
+
           {isLoggedIn ? (
-            // ── Logged-in actions ──────────────────────────────
             <>
-              <Link
-                to="/chat"
-                className="hidden rounded-full border border-slate-200 bg-white px-3 py-2 text-lg text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-400 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 sm:inline-flex"
-                title="Messages"
-              >
-                💬
+              <Link to="/chat" title="Messages"
+                className="ml-1 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-white text-[var(--fg-muted)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]">
+                <MessageSquare size={16} />
               </Link>
-              <Link
-                to="/post-ad"
-                className="rounded-full bg-gradient-to-r from-emerald-600 to-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-glow transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
-              >
-                + List an item
-              </Link>
-              <Link
-                to="/profile"
-                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-lg text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-400 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                title="My Profile"
-              >
-                👤
+              <Link to="/profile" title="Profile"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-white text-[var(--fg-muted)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]">
+                <User size={16} />
               </Link>
             </>
           ) : (
-            // ── Logged-out: only Log in ────────────────────────
-            <Link
-              to="/login"
-              className="rounded-full bg-gradient-to-r from-emerald-600 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
-            >
-              Log in
-            </Link>
+            <Link to="/login" className="btn-outline ml-1 px-4 py-2 text-sm">Log in</Link>
           )}
-        </div>
 
+          <Link to="/post-ad" className="btn-primary ml-2 flex items-center gap-1.5 px-4 py-2 text-sm">
+            <Plus size={14} strokeWidth={2.5} /> List an item
+          </Link>
+        </nav>
+
+        {/* Hamburger */}
+        <button
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-white text-[var(--fg)] md:hidden transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+          aria-label="Toggle menu"
+        >
+          {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
       </div>
+
+      {/* Mobile dropdown */}
+      {isMenuOpen && (
+        <div className="border-t border-[var(--border)] bg-white/95 backdrop-blur-xl px-4 py-4 md:hidden"
+          style={{ animation: 'slideDown 0.2s ease' }}>
+          <form onSubmit={handleSearch} className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+            <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search…"
+              className="w-full rounded-full border border-[var(--border)] bg-[var(--bg)] py-2 pl-9 pr-4 text-sm text-[var(--fg)] focus:border-[var(--primary)] focus:outline-none" />
+          </form>
+          <nav className="flex flex-col gap-1">
+            {[['/#categories','Categories'],['/#listings','Listings']].map(([to,label]) => (
+              <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
+                className="rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--fg-muted)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors">
+                {label}
+              </Link>
+            ))}
+            {isLoggedIn && ['/chat','Messages'],['/profile','My Profile'].map(([to,label]) => (
+              <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
+                className="rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--fg-muted)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors">
+                {label}
+              </Link>
+            ))}
+            <div className="mt-3 flex gap-2 border-t border-[var(--border)] pt-3">
+              {!isLoggedIn && <Link to="/login" onClick={() => setIsMenuOpen(false)} className="btn-outline flex-1 justify-center py-2.5 text-sm">Log in</Link>}
+              <Link to="/post-ad" onClick={() => setIsMenuOpen(false)} className="btn-primary flex-1 justify-center py-2.5 text-sm">+ List an item</Link>
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };

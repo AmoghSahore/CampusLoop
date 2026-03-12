@@ -1,221 +1,146 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { User, Mail, Building2, Lock, ArrowRight, Recycle, Eye, EyeOff } from 'lucide-react';
 import API_BASE from '../config/api.js';
 
+const FIELDS = [
+  { name:'name',       label:'Full name',     type:'text',     icon:User,      placeholder:'Arjun Kumar',        auto:'name'         },
+  { name:'email',      label:'College email', type:'email',    icon:Mail,      placeholder:'you@college.edu',    auto:'email'        },
+  { name:'college',    label:'College / University', type:'text', icon:Building2, placeholder:'IIT Delhi',        auto:'organization' },
+];
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    university: '',
-    agreeToTerms: false
-  });
-  const [error, setError] = useState('');
+  const [form,    setForm]    = useState({ name:'', email:'', college:'', password:'' });
   const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState('');
+  const [showPw,  setShowPw]  = useState(false);
+  const [agreed,  setAgreed]  = useState(false);
 
-  const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setFormData({
-      ...formData,
-      [e.target.name]: value
-    });
-  };
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
-    // Client-side validations (the server double-checks these too)
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-    if (!formData.agreeToTerms) {
-      setError('You must agree to the terms and conditions');
-      return;
-    }
-
-    setLoading(true);
-
+    if (!agreed) { setError('Please accept the terms to continue.'); return; }
+    setLoading(true); setError('');
     try {
-      const response = await axios.post(`${API_BASE}/api/auth/signup`, {
-        fullName: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        confirmPassword: formData.confirmPassword,
-      });
-
-      // Store token and user so the user is instantly logged in
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-
-      // Tell the Navbar to re-check auth state immediately
+      const r = await axios.post(`${API_BASE}/api/auth/register`, form);
+      localStorage.setItem('token', r.data.token);
+      localStorage.setItem('user', JSON.stringify(r.data.user));
       window.dispatchEvent(new Event('authChange'));
-
-      // Go straight to the home page — no separate login step needed
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Signup failed. Please try again.');
-      setLoading(false);
-    }
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(16,185,129,0.18)_0,transparent_30%),radial-gradient(circle_at_80%_0,rgba(59,130,246,0.18)_0,transparent_28%)] opacity-70" aria-hidden />
+    <div className="flex min-h-screen">
+      {/* Left brand panel */}
+      <div className="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 relative overflow-hidden"
+        style={{ background:'var(--grad-hero)' }}>
+        <div className="absolute inset-0 bg-dot-grid opacity-20 pointer-events-none" />
+        <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full blur-3xl opacity-20"
+          style={{ background:'radial-gradient(circle,#4ade80,transparent)' }} />
 
-      <div className="relative mx-auto flex min-h-screen max-w-6xl items-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid w-full gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
-              ♻ Join the loop
-            </div>
-            <h1 className="text-4xl font-extrabold text-slate-900 sm:text-5xl">
-              Create your CampusLoop account
-              <span className="block text-emerald-600">Trade sustainably with your peers.</span>
-            </h1>
-            <p className="max-w-xl text-lg text-slate-600">
-              Keep textbooks, gadgets, and lab gear in circulation. Your university email keeps transactions safe and local.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {["Verified students", "Meet on campus", "Zero fees"].map((item) => (
-                <div key={item} className="rounded-2xl bg-white p-4 text-center text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200">
-                  {item}
-                </div>
-              ))}
-            </div>
+        <Link to="/" className="relative flex items-center gap-2.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl"
+            style={{ background:'var(--grad-primary)', boxShadow:'0 2px 12px var(--primary-glow)' }}>
+            <Recycle className="h-5 w-5 text-white" />
           </div>
+          <span className="text-xl font-bold text-white">Campus<span style={{ background:'linear-gradient(135deg,#4ade80,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Loop</span></span>
+        </Link>
 
-          <div className="glass-card w-full max-w-xl border border-white/70 bg-white/90 p-8 shadow-2xl ring-1 ring-slate-200">
-            <div className="mb-6 text-center">
-              <div className="text-2xl font-extrabold text-emerald-700">Create account</div>
-              <p className="text-sm text-slate-500">Use your university email for faster verification</p>
-            </div>
+        <div className="relative">
+          <h2 className="text-3xl font-extrabold leading-tight text-white">
+            Join thousands of<br />students trading smarter.
+          </h2>
+          <p className="mt-4 text-white/50">
+            List your unused items, find great deals from classmates, and earn green credits for sustainable trades.
+          </p>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              {error && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-                  {error}
-                </div>
-              )}
-
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-800">Full name</span>
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  placeholder="John Doe"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                  required
-                />
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-800">University email</span>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  placeholder="your.name@university.edu"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                  required
-                />
-                <span className="block text-xs text-slate-500">Use your official university email address</span>
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-800">University</span>
-                <input
-                  type="text"
-                  id="university"
-                  name="university"
-                  placeholder="Enter your university name"
-                  value={formData.university}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                  required
-                />
-              </label>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-slate-800">Password</span>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Min. 6 characters"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                    required
-                  />
-                </label>
-
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-slate-800">Confirm password</span>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    placeholder="Re-enter password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                    required
-                  />
-                </label>
+          {/* Floating stat cards */}
+          <div className="mt-10 grid grid-cols-2 gap-3">
+            {[['12.3k','Items rehomed'],['4.2k','Active students'],['₹0','Platform fees'],['8 min','Avg. reply']].map(([v,l])=>(
+              <div key={l} className="rounded-xl border border-white/10 bg-white/6 p-4 backdrop-blur-sm">
+                <p className="text-xl font-extrabold text-emerald-400">{v}</p>
+                <p className="mt-0.5 text-xs text-white/45">{l}</p>
               </div>
-
-              <label className="flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-inner">
-                <input
-                  type="checkbox"
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={handleChange}
-                  className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span>
-                  I agree to the{' '}
-                  <Link to="/terms" className="font-semibold text-emerald-700 hover:text-emerald-600">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link to="/privacy" className="font-semibold text-emerald-700 hover:text-emerald-600">
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 to-cyan-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/60 disabled:cursor-not-allowed disabled:opacity-80"
-              >
-                {loading ? 'Creating account...' : 'Create account'}
-              </button>
-            </form>
-
-            <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-center text-sm text-slate-600 ring-1 ring-slate-100">
-              Already have an account?{' '}
-              <Link to="/login" className="font-semibold text-emerald-700 hover:text-emerald-600">
-                Sign in here
-              </Link>
-            </div>
+            ))}
           </div>
+        </div>
+
+        <p className="relative text-xs text-white/25">© 2026 CampusLoop</p>
+      </div>
+
+      {/* Right form panel */}
+      <div className="flex flex-1 items-center justify-center bg-[var(--bg)] px-6 py-12">
+        <div className="w-full max-w-md">
+          <Link to="/" className="mb-8 flex items-center gap-2.5 lg:hidden">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background:'var(--grad-primary)' }}>
+              <Recycle className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-[var(--fg)]">Campus<span className="text-gradient">Loop</span></span>
+          </Link>
+
+          <h1 className="text-2xl font-extrabold text-[var(--fg)]">Create account</h1>
+          <p className="mt-1 text-sm text-[var(--fg-muted)]">
+            Already have one?{' '}
+            <Link to="/login" className="font-semibold text-[var(--primary)] hover:underline">Sign in</Link>
+          </p>
+
+          {error && (
+            <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{error}</div>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            {FIELDS.map(({ name, label, type, icon: Icon, placeholder, auto }) => (
+              <div key={name}>
+                <label className="mb-1.5 block text-sm font-semibold text-[var(--fg)]">{label}</label>
+                <div className="relative">
+                  <Icon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                  <input type={type} name={name} required autoComplete={auto}
+                    value={form[name]} onChange={handleChange} placeholder={placeholder}
+                    className="input-base pl-10" />
+                </div>
+              </div>
+            ))}
+
+            {/* Password */}
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-[var(--fg)]">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                <input type={showPw ? 'text' : 'password'} name="password" required autoComplete="new-password"
+                  value={form.password} onChange={handleChange} placeholder="Min. 8 characters"
+                  className="input-base pl-10 pr-10" />
+                <button type="button" onClick={()=>setShowPw(v=>!v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle)] hover:text-[var(--fg)] transition">
+                  {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
+                </button>
+              </div>
+            </div>
+
+            {/* Terms */}
+            <label className="flex cursor-pointer items-start gap-3 pt-1">
+              <input type="checkbox" checked={agreed} onChange={e=>setAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 cursor-pointer accent-[var(--primary)]" />
+              <span className="text-xs text-[var(--fg-muted)]">
+                I agree to the{' '}
+                <a href="#" className="font-semibold text-[var(--primary)] hover:underline">Terms of Service</a>{' '}
+                and{' '}
+                <a href="#" className="font-semibold text-[var(--primary)] hover:underline">Privacy Policy</a>
+              </span>
+            </label>
+
+            <button type="submit" disabled={loading || !agreed}
+              className="btn-primary mt-2 w-full justify-center py-3 text-base gap-2">
+              {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
+              {loading ? 'Creating account…' : 'Create account'}
+              {!loading && <ArrowRight size={16} />}
+            </button>
+          </form>
         </div>
       </div>
     </div>

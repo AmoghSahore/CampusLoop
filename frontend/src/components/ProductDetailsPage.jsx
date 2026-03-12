@@ -1,216 +1,186 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import { ArrowLeft, MessageSquare, Heart, ShieldCheck, MapPin, Calendar, Tag, ZoomIn, X } from 'lucide-react';
 import API_BASE from '../config/api.js';
+
+const typeConfig = {
+  FREE:   { label:'Free', cls:'badge-free'   },
+  DONATE: { label:'Free', cls:'badge-free'   },
+  RENT:   { label:'Rent', cls:'badge-rent'   },
+  SELL:   { label:'Sell', cls:'badge-accent' },
+  SALE:   { label:'Sell', cls:'badge-accent' },
+  LEND:   { label:'Lend', cls:'badge-rent'   },
+};
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error,   setError]   = useState(null);
+  const [liked,   setLiked]   = useState(false);
+  const [zoomed,  setZoomed]  = useState(false);
 
   useEffect(() => {
-    const fetchProductDetails = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${API_BASE}/api/products/${id}`);
-        setProduct(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching product details:', err);
-        setError('Failed to load product details');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProductDetails();
+    axios.get(`${API_BASE}/api/products/${id}`)
+      .then(r => { setProduct(r.data); setLoading(false); })
+      .catch(() => { setError('Failed to load product details'); setLoading(false); });
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
-        <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4">
-          <div className="text-center">
-            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div>
-            <p className="mt-4 text-lg text-slate-600">Loading product...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
+      <div className="text-center"><div className="spinner mx-auto"/><p className="mt-3 text-sm text-[var(--fg-muted)]">Loading…</p></div>
+    </div>
+  );
 
-  if (error || !product) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
-        <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4">
-          <div className="text-center">
-            <p className="text-xl text-rose-600">{error || 'Product not found'}</p>
-            <Link
-              to="/"
-              className="mt-4 inline-block rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5"
-            >
-              Back to Home
-            </Link>
-          </div>
-        </div>
+  if (error || !product) return (
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
+      <div className="text-center">
+        <p className="text-lg font-semibold text-rose-600">{error || 'Product not found'}</p>
+        <Link to="/" className="btn-primary mt-4">Back to Home</Link>
       </div>
-    );
-  }
+    </div>
+  );
 
-  const imageUrl = `${API_BASE}/api/products/${id}/image`;
+  const raw = (product.listingType || product.type || '').toUpperCase();
+  const typeCfg = typeConfig[raw] || { label: raw || 'Item', cls: 'badge-muted' };
+  const isFree = product.price === 0 || typeCfg.label === 'Free';
+  const imageUrl = product.imageUrl || `${API_BASE}/api/products/${id}/image`;
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.2)_0,_transparent_45%),radial-gradient(circle_at_20%_20%,_rgba(59,130,246,0.2)_0,_transparent_35%)] opacity-60" aria-hidden />
+    <div className="min-h-screen pt-6 pb-20" style={{ background:'linear-gradient(180deg,var(--bg) 0%,#edf7f0 100%)' }}>
+      <div className="container-xl">
+        <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--primary)] hover:underline mb-8">
+          <ArrowLeft size={16}/> Back to listings
+        </Link>
 
-      <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700"
-          >
-            ← Back to listings
-          </Link>
-        </div>
+        <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
 
-        {/* Product Details */}
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Image Section */}
-          <div className="overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200">
-            <div className="aspect-square overflow-hidden bg-slate-100">
-              <img
-                src={imageUrl}
-                alt={product.title}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.target.src = 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80';
-                }}
-              />
+          {/* ── Image ───────────────────────────────────────────────── */}
+          <div className="glass-card overflow-hidden group cursor-zoom-in" onClick={() => setZoomed(true)}>
+            <div className="relative aspect-square overflow-hidden bg-[var(--bg-alt)]">
+              <img src={imageUrl} alt={product.title}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={e => { e.target.src = 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=800&q=80'; }} />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-[var(--fg)] shadow-lg">
+                  <ZoomIn size={20}/>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Details Section */}
-          <div className="space-y-6">
-            <div className="glass-card border border-white/70 bg-white/90 p-8 shadow-2xl ring-1 ring-slate-200">
-              {/* Category Badge */}
-              {product.category && (
-                <div className="mb-4">
-                  <span className="inline-block rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
-                    {product.category}
-                  </span>
-                </div>
-              )}
+          {/* ── Details ─────────────────────────────────────────────── */}
+          <div className="space-y-5">
+            <div className="glass-card p-7">
+              {/* Badges */}
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                {product.category && (
+                  <span className="badge badge-primary flex items-center gap-1"><Tag size={11}/>{product.category}</span>
+                )}
+                <span className={`badge ${typeCfg.cls}`}>{typeCfg.label}</span>
+              </div>
 
-              {/* Title */}
-              <h1 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">
-                {product.title}
-              </h1>
+              <h1 className="text-2xl font-extrabold leading-snug text-[var(--fg)] sm:text-3xl">{product.title}</h1>
 
               {/* Price */}
-              <div className="mt-4 flex items-baseline gap-3">
-                <p className="text-4xl font-extrabold text-emerald-600">
-                  ₹{product.price}
-                </p>
-                {product.type && (
-                  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${product.type === "Free"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : product.type === "Rent"
-                      ? "bg-sky-100 text-sky-700"
-                      : "bg-amber-100 text-amber-800"
-                    }`}>
-                    {product.type}
-                  </span>
+              <div className="mt-4">
+                {isFree ? (
+                  <p className="text-4xl font-extrabold text-gradient">Free</p>
+                ) : (
+                  <p className="text-4xl font-extrabold" style={{ background:'var(--grad-primary)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
+                    ₹{Number(product.price).toLocaleString('en-IN')}
+                  </p>
                 )}
+                {product.condition && <span className="mt-2 inline-block badge badge-muted">{product.condition}</span>}
               </div>
 
               {/* Description */}
               {product.description && (
-                <div className="mt-6">
-                  <h2 className="text-lg font-semibold text-slate-900">Description</h2>
-                  <p className="mt-2 whitespace-pre-line text-slate-600">
-                    {product.description}
-                  </p>
+                <div className="mt-5">
+                  <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-[var(--fg-subtle)]">Description</h2>
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--fg-muted)]">{product.description}</p>
                 </div>
               )}
 
-              {/* Condition */}
-              {product.condition && (
-                <div className="mt-6">
-                  <h2 className="text-lg font-semibold text-slate-900">Condition</h2>
-                  <p className="mt-2 text-slate-600">{product.condition}</p>
-                </div>
-              )}
-
-              {/* Seller Info */}
+              {/* Seller */}
               {product.seller && (
-                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <h2 className="text-sm font-semibold text-slate-900">Seller</h2>
-                  <p className="mt-1 text-slate-700">
-                    {product.seller.name || 'Anonymous'}
-                  </p>
-                  {product.seller.email && (
-                    <p className="mt-1 text-sm text-slate-500">
-                      {product.seller.email}
-                    </p>
-                  )}
+                <div className="mt-5 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-alt)] p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                    style={{ background:'var(--grad-primary)' }}>
+                    {(product.seller.name || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[var(--fg)]">{product.seller.name || 'Anonymous'}</p>
+                    {product.seller.email && <p className="text-xs text-[var(--fg-muted)] truncate">{product.seller.email}</p>}
+                  </div>
                 </div>
               )}
 
-              {/* Posted Date */}
               {product.createdAt && (
-                <div className="mt-4 text-sm text-slate-500">
-                  Posted on {new Date(product.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </div>
+                <p className="mt-3 flex items-center gap-1.5 text-xs text-[var(--fg-subtle)]">
+                  <Calendar size={12}/>
+                  Posted {new Date(product.createdAt).toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric' })}
+                </p>
               )}
 
-              {/* Standard actions (bidding flow disabled) */}
-              <div className="mt-8 flex gap-4">
-                <Link
-                  to={`/chat?sellerId=${product.seller?._id || product.seller}`}
-                  className="flex-1 rounded-full bg-gradient-to-r from-emerald-600 to-cyan-500 px-6 py-3 text-center text-base font-semibold text-white shadow-glow transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
-                >
-                  💬 Chat with Seller
+              {/* CTA */}
+              <div className="mt-6 flex gap-3">
+                <Link to={`/chat?sellerId=${product.seller?._id || product.seller}`}
+                  className="btn-primary flex-1 justify-center gap-2 py-3 text-base">
+                  <MessageSquare size={17}/> Chat with Seller
                 </Link>
-                <button className="rounded-full border border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-emerald-400 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/60">
-                  ♡
+                <button onClick={() => setLiked(!liked)}
+                  className={`flex h-12 w-12 items-center justify-center rounded-full border transition-all ${
+                    liked ? 'border-rose-400 bg-rose-50 text-rose-500 scale-110' : 'border-[var(--border)] bg-white text-[var(--fg-muted)] hover:border-rose-400 hover:text-rose-500'
+                  }`}>
+                  <Heart size={18} fill={liked ? 'currentColor' : 'none'}/>
                 </button>
               </div>
             </div>
 
-            {/* Bidding interface intentionally disabled for current release */}
-
-            {/* Safety Tips */}
-            <div className="glass-card border border-white/70 bg-white/90 p-6 shadow-lg ring-1 ring-slate-200">
-              <h3 className="mb-4 text-lg font-semibold text-slate-900">Safety Tips</h3>
-              <ul className="space-y-2 text-sm text-slate-600">
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-600">✓</span>
-                  <span>Meet in public campus locations</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-600">✓</span>
-                  <span>Verify the item before making payment</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-600">✓</span>
-                  <span>Use university email for communication</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-600">✓</span>
-                  <span>Report suspicious listings</span>
-                </li>
+            {/* Safety tips */}
+            <div className="glass-card p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg"
+                  style={{ background:'var(--grad-primary)', boxShadow:'0 2px 8px var(--primary-glow)' }}>
+                  <ShieldCheck size={14} className="text-white"/>
+                </div>
+                <h3 className="text-sm font-bold text-[var(--fg)]">Safety Tips</h3>
+              </div>
+              <ul className="space-y-2">
+                {[
+                  { icon:MapPin,      text:'Meet in public campus locations'           },
+                  { icon:ShieldCheck, text:'Verify item before making payment'          },
+                  { icon:ShieldCheck, text:'Use university email for communication'     },
+                  { icon:ShieldCheck, text:'Report suspicious listings immediately'     },
+                ].map(({ icon:Icon, text }) => (
+                  <li key={text} className="flex items-start gap-2 text-sm text-[var(--fg-muted)]">
+                    <Icon size={14} className="mt-0.5 shrink-0 text-[var(--primary)]"/>
+                    {text}
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Image zoom lightbox ─────────────────────────────────────────── */}
+      {zoomed && (
+        <div role="dialog" aria-modal="true" onClick={() => setZoomed(false)}
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4 cursor-zoom-out"
+          style={{ animation:'fadeIn 0.2s ease' }}>
+          <button onClick={() => setZoomed(false)}
+            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition"
+            aria-label="Close">
+            <X size={18}/>
+          </button>
+          <img src={imageUrl} alt={product.title} onClick={e => e.stopPropagation()}
+            className="max-h-[90vh] max-w-full rounded-2xl object-contain shadow-2xl cursor-default"
+            style={{ animation:'zoomIn 0.2s ease' }}/>
+        </div>
+      )}
     </div>
   );
 };
