@@ -14,6 +14,16 @@ const HomePage = () => {
   const selectedCategory = searchParams.get('category') || '';
   const [showTop, setShowTop] = useState(false);
 
+  // Scroll to listings section whenever search or category filter is applied
+  useEffect(() => {
+    if (searchQuery || selectedCategory) {
+      const t = setTimeout(() => {
+        document.getElementById('listings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+      return () => clearTimeout(t);
+    }
+  }, [searchQuery, selectedCategory]);
+
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 450);
     window.addEventListener('scroll', onScroll, { passive: true });

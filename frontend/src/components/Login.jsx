@@ -49,7 +49,7 @@ const Login = () => {
             style={{ background:'var(--grad-primary)', boxShadow:'0 2px 12px var(--primary-glow)' }}>
             <Recycle className="h-5 w-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-white">Campus<span style={{ background:'linear-gradient(135deg,#4ade80,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Loop</span></span>
+          <span className="text-xl font-bold text-white">Campus<span style={{ background:'linear-gradient(135deg,#a78bfa,#818cf8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Loop</span></span>
         </div>
 
         <div className="relative space-y-8">
@@ -63,7 +63,7 @@ const Login = () => {
             {features.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-center gap-3">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                  <Icon className="h-4 w-4 text-emerald-400" />
+                  <Icon className="h-4 w-4 text-violet-400" />
                 </span>
                 <span className="text-sm text-white/70">{text}</span>
               </li>

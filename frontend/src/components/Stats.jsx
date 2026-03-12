@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Home, Scale, Clock, Users } from 'lucide-react';
 
 const statsData = [
-  { icon: Home,  target: 12300, format: v => (v/1000).toFixed(1)+'k', label: 'Items rehomed',   iconBg: 'linear-gradient(135deg,#4ade80,#22c55e)', iconColor: '#fff' },
-  { icon: Scale, target: 68,    format: v => v+' tons',               label: 'Waste diverted',  iconBg: 'linear-gradient(135deg,#34d399,#059669)', iconColor: '#fff' },
+  { icon: Home,  target: 12300, format: v => (v/1000).toFixed(1)+'k', label: 'Items rehomed',   iconBg: 'linear-gradient(135deg,#a78bfa,#7c3aed)', iconColor: '#fff' },
+  { icon: Scale, target: 68,    format: v => v+' tons',               label: 'Waste diverted',  iconBg: 'linear-gradient(135deg,#818cf8,#4f46e5)', iconColor: '#fff' },
   { icon: Clock, target: 8,     format: v => v+' min',                label: 'Avg. reply time', iconBg: 'linear-gradient(135deg,#60a5fa,#3b82f6)', iconColor: '#fff' },
   { icon: Users, target: 4200,  format: v => (v/1000).toFixed(1)+'k', label: 'Active students', iconBg: 'linear-gradient(135deg,#f59e0b,#d97706)', iconColor: '#fff' },
 ];
@@ -52,7 +52,7 @@ const Stats = () => {
     <section ref={ref} className="bg-white py-12 border-b border-[var(--border)]">
       <div className="container-xl">
         {/* Subtle gradient divider at top */}
-        <div className="mb-10 h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, var(--primary), transparent)' }} />
+        <div className="mb-10 h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #818cf8, transparent)' }} />
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {statsData.map((s) => <StatItem key={s.label} {...s} active={active} />)}
         </div>

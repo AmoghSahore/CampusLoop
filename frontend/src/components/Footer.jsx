@@ -13,9 +13,9 @@ const Footer = () => {
   const [submitted, setSubmitted] = useState(false);
 
   return (
-    <footer style={{ background: 'linear-gradient(160deg, #0f2d1e 0%, #0c1f14 60%, #071510 100%)' }}>
+    <footer style={{ background: 'linear-gradient(160deg, #0f0e1a 0%, #14122e 60%, #08071a 100%)' }}>
       {/* Top wave */}
-      <div className="h-px w-full" style={{ background:'linear-gradient(90deg,transparent,rgba(29,154,108,0.5),transparent)' }} />
+      <div className="h-px w-full" style={{ background:'linear-gradient(90deg,transparent,rgba(99,102,241,0.5),transparent)' }} />
 
       <div className="container-xl py-16 lg:py-20">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-5">
@@ -28,7 +28,7 @@ const Footer = () => {
                 <Recycle className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">
-                Campus<span style={{ background:'linear-gradient(135deg,#4ade80,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Loop</span>
+                Campus<span style={{ background:'linear-gradient(135deg,#a78bfa,#818cf8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Loop</span>
               </span>
             </Link>
 
@@ -41,7 +41,7 @@ const Footer = () => {
             <div className="flex gap-2.5">
               {[Github, Twitter, Instagram].map((Icon, i) => (
                 <a key={i} href="#"
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 text-white/40 transition-all hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-400">
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 text-white/40 transition-all hover:border-violet-500/50 hover:bg-violet-500/10 hover:text-violet-400">
                   <Icon size={16} />
                 </a>
               ))}
@@ -51,11 +51,11 @@ const Footer = () => {
             <div>
               <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-white/40">Stay updated</p>
               {submitted ? (
-                <div className="flex items-center gap-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
-                  <CheckCircle className="h-5 w-5 shrink-0 text-emerald-400" />
+                <div className="flex items-center gap-2.5 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-3">
+                  <CheckCircle className="h-5 w-5 shrink-0 text-violet-400" />
                   <div>
-                    <p className="text-sm font-semibold text-emerald-300">You're in!</p>
-                    <p className="text-xs text-emerald-400/70">Updates headed to {email}</p>
+                    <p className="text-sm font-semibold text-violet-300">You're in!</p>
+                    <p className="text-xs text-violet-400/70">Updates headed to {email}</p>
                   </div>
                 </div>
               ) : (
@@ -64,7 +64,7 @@ const Footer = () => {
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
                     <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required
                       placeholder="your@email.edu"
-                      className="w-full rounded-xl border border-white/10 bg-white/7 py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-white/25 focus:border-emerald-500/50 focus:outline-none transition" />
+                      className="w-full rounded-xl border border-white/10 bg-white/7 py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-white/25 focus:border-violet-500/50 focus:outline-none transition" />
                   </div>
                   <button type="submit"
                     className="flex items-center justify-center rounded-xl px-3.5 text-white transition-all hover:scale-105"
@@ -83,7 +83,7 @@ const Footer = () => {
               <ul className="space-y-3">
                 {links.map(([name, href]) => (
                   <li key={name}>
-                    <Link to={href} className="text-sm text-white/45 transition-colors hover:text-emerald-400">{name}</Link>
+                    <Link to={href} className="text-sm text-white/45 transition-colors hover:text-violet-400">{name}</Link>
                   </li>
                 ))}
               </ul>
@@ -96,7 +96,7 @@ const Footer = () => {
           <p className="text-xs text-white/30">© 2026 CampusLoop · For students, by students.</p>
           <div className="flex gap-5">
             {['Privacy','Terms','Status'].map(item=>(
-              <a key={item} href="#" className="text-xs text-white/30 transition-colors hover:text-emerald-400">{item}</a>
+              <a key={item} href="#" className="text-xs text-white/30 transition-colors hover:text-violet-400">{item}</a>
             ))}
           </div>
         </div>

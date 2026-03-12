@@ -77,7 +77,7 @@ const ChatPage = () => {
     return (
       <button onClick={() => setActiveChat(chat)}
         className={`w-full border-b border-[var(--border)] px-4 py-3.5 text-left transition-all hover:bg-[var(--bg-alt)] ${
-          isActive ? 'bg-emerald-50 border-l-[3px] border-l-[var(--primary)]' : ''
+          isActive ? 'bg-indigo-50 border-l-[3px] border-l-[var(--primary)]' : ''
         }`}>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
@@ -113,7 +113,7 @@ const ChatPage = () => {
           <div className="relative flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg"
               style={{ background:'rgba(255,255,255,0.12)', backdropFilter:'blur(8px)', border:'1px solid rgba(255,255,255,0.15)' }}>
-              <MessageSquare size={15} className="text-emerald-300"/>
+              <MessageSquare size={15} className="text-violet-300"/>
             </div>
             <h1 className="text-base font-bold text-white">Messages</h1>
           </div>

@@ -91,22 +91,22 @@ const ProfilePage = () => {
             <div className="relative flex items-center justify-between flex-wrap gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-white/50">Green Credits Score</p>
-                <p className="mt-1 text-5xl font-extrabold text-emerald-400">{credits}</p>
+                <p className="mt-1 text-5xl font-extrabold text-violet-400">{credits}</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <Award size={14} className="text-emerald-300"/>
-                  <p className="text-sm font-semibold text-emerald-300">{lvl.level}</p>
+                  <Award size={14} className="text-violet-300"/>
+                  <p className="text-sm font-semibold text-violet-300">{lvl.level}</p>
                 </div>
               </div>
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl"
                 style={{ background:'rgba(255,255,255,0.08)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.12)' }}>
-                <Leaf size={32} className="text-emerald-400"/>
+                <Leaf size={32} className="text-violet-400"/>
               </div>
             </div>
             {/* Progress bar */}
             <div className="relative mt-4">
               <div className="h-1.5 w-full rounded-full bg-white/10">
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width:`${progress}%`, background:'linear-gradient(90deg,#4ade80,#34d399)' }}/>
+                  style={{ width:`${progress}%`, background:'linear-gradient(90deg,#a78bfa,#818cf8)' }}/>
               </div>
               <p className="mt-1.5 text-[10px] text-white/35">Earn credits by completing transactions and reducing waste</p>
             </div>

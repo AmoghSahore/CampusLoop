@@ -7,7 +7,7 @@ const categories = [
   { title:'Lab Equipment', count:127, icon:FlaskConical, grad:'linear-gradient(135deg,#99f6e4,#5eead4)', textColor:'#0f766e' },
   { title:'Furniture',     count:95,  icon:Armchair,    grad:'linear-gradient(135deg,#fde68a,#fcd34d)', textColor:'#92400e' },
   { title:'Clothing',      count:211, icon:Shirt,       grad:'linear-gradient(135deg,#fbcfe8,#f9a8d4)', textColor:'#9d174d' },
-  { title:'Others',        count:78,  icon:Package,     grad:'linear-gradient(135deg,#d9f99d,#bbf7d0)', textColor:'#166534' },
+  { title:'Others',        count:78,  icon:Package,     grad:'linear-gradient(135deg,#ddd6fe,#c4b5fd)', textColor:'#5b21b6' },
 ];
 
 const Categories = () => {

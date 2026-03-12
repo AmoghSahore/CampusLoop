@@ -49,7 +49,7 @@ const Signup = () => {
             style={{ background:'var(--grad-primary)', boxShadow:'0 2px 12px var(--primary-glow)' }}>
             <Recycle className="h-5 w-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-white">Campus<span style={{ background:'linear-gradient(135deg,#4ade80,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Loop</span></span>
+          <span className="text-xl font-bold text-white">Campus<span style={{ background:'linear-gradient(135deg,#a78bfa,#818cf8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Loop</span></span>
         </Link>
 
         <div className="relative">
@@ -64,7 +64,7 @@ const Signup = () => {
           <div className="mt-10 grid grid-cols-2 gap-3">
             {[['12.3k','Items rehomed'],['4.2k','Active students'],['₹0','Platform fees'],['8 min','Avg. reply']].map(([v,l])=>(
               <div key={l} className="rounded-xl border border-white/10 bg-white/6 p-4 backdrop-blur-sm">
-                <p className="text-xl font-extrabold text-emerald-400">{v}</p>
+                <p className="text-xl font-extrabold text-violet-400">{v}</p>
                 <p className="mt-0.5 text-xs text-white/45">{l}</p>
               </div>
             ))}
