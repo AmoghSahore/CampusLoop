@@ -19,10 +19,10 @@ const MOSAIC = [
     tag: 'Free', tagBg: '#10b981',
     title: 'Lab coat, size M',
     price: 'Free', meta: 'Lab Equipment · Bio',
-    image: 'https://images.unsplash.com/photo-1580281657527-47f249e8f2f9?auto=format&fit=crop&w=500&q=80',
+    image: 'https://cdn.theschoollocker.com.au/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/l/c/lcw-005.png?auto=format&fit=crop&w=500&q=80',
   },
   {
-    tag: 'Sell', tagBg: '#f97316',
+    tag: 'Sell', tagBg: '#4b4643',
     title: 'Ergonomic Study Chair',
     price: '₹2,800', meta: 'Furniture · Hostel',
     image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=500&q=80',

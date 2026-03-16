@@ -44,6 +44,17 @@ const Navbar = () => {
     }
   };
 
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // If element not found (e.g., on a different page), navigate home first
+      navigate(`/?scrollTo=${id}`);
+    }
+    setIsMenuOpen(false);
+  };
+
   return (
     <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${
       isScrolled
@@ -81,13 +92,13 @@ const Navbar = () => {
 
         {/* Nav – desktop */}
         <nav className="hidden items-center gap-0.5 md:flex">
-          <Link to="/#categories" className="btn-ghost text-sm">Categories</Link>
-          <Link to="/#listings"   className="btn-ghost text-sm">Listings</Link>
+          <button onClick={() => scrollToSection('categories')} className="btn-ghost text-sm">Categories</button>
+          <button onClick={() => scrollToSection('listings')}   className="btn-ghost text-sm">Listings</button>
 
           <div className="mx-2.5 h-5 w-px bg-[var(--border)]" />
 
           {/* Wishlist badge */}
-          <Link to="/#listings" title="Wishlist"
+          <Link to="/wishlist" title="Wishlist"
             className={`relative flex h-9 w-9 items-center justify-center rounded-xl border transition-all
               ${wishlistCount > 0
                 ? 'border-rose-200 bg-rose-50 text-rose-500'
@@ -141,13 +152,23 @@ const Navbar = () => {
               className="w-full rounded-full border border-[var(--border)] bg-[var(--bg)] py-2 pl-9 pr-4 text-sm text-[var(--fg)] focus:border-[var(--primary)] focus:outline-none" />
           </form>
           <nav className="flex flex-col gap-1">
-            {[['/#categories','Categories'],['/#listings','Listings']].map(([to,label]) => (
-              <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--fg-muted)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors">
-                {label}
-              </Link>
-            ))}
-            {isLoggedIn && ['/chat','Messages'],['/profile','My Profile'].map(([to,label]) => (
+            <button key="categories" onClick={() => scrollToSection('categories')}
+              className="rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--fg-muted)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors">
+              Categories
+            </button>
+            <button key="listings" onClick={() => scrollToSection('listings')}
+              className="rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--fg-muted)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors">
+              Listings
+            </button>
+            <Link key="wishlist" to="/wishlist" onClick={() => setIsMenuOpen(false)}
+              className="rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--fg-muted)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors flex items-center justify-between">
+              Wishlist
+              {wishlistCount > 0 && <span className="h-4 min-w-[1rem] flex items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">{wishlistCount}</span>}
+            </Link>
+            {isLoggedIn && [
+              ['/chat', 'Messages'],
+              ['/profile', 'My Profile']
+            ].map(([to, label]) => (
               <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
                 className="rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--fg-muted)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors">
                 {label}

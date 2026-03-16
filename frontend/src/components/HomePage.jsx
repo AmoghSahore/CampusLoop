@@ -12,7 +12,18 @@ const HomePage = () => {
   const [searchParams]   = useSearchParams();
   const searchQuery      = searchParams.get('search')   || '';
   const selectedCategory = searchParams.get('category') || '';
+  const scrollTo         = searchParams.get('scrollTo') || '';
   const [showTop, setShowTop] = useState(false);
+
+  // Scroll to section from URL parameter
+  useEffect(() => {
+    if (scrollTo) {
+      const t = setTimeout(() => {
+        document.getElementById(scrollTo)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300); // More delay for page load
+      return () => clearTimeout(t);
+    }
+  }, [scrollTo]);
 
   // Scroll to listings section whenever search or category filter is applied
   useEffect(() => {

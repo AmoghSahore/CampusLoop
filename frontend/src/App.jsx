@@ -6,6 +6,7 @@ import ProductDetailsPage from "./components/ProductDetailsPage";
 import ChatPage from "./components/ChatPage";
 import ProfilePage from "./components/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import WishlistPage from "./components/WishlistPage";
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
@@ -31,6 +32,7 @@ function App() {
             <ProfilePage />
           // </ProtectedRoute>
         } />
+        <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/" element={<HomePage />} />
       </Routes>
     </BrowserRouter>
