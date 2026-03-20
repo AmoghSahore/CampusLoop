@@ -1,7 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
-import API_BASE from '../config/api.js';
-import { getWishlist } from '../utils/wishlist.js';
+import { useState, useEffect } from 'react';
+import { getWishlistItemsFromServer } from '../utils/wishlist.js';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import ProductCard from './ProductCard';
@@ -11,35 +9,28 @@ import { Link } from 'react-router-dom';
 const WishlistPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading]  = useState(true);
-  const [wishlistIds, setWishlistIds] = useState(() => getWishlist());
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        // We fetch all products and filter locally for simplicity, 
-        // considering the SAMPLE and existing API structure.
-        const r = await axios.get(`${API_BASE}/api/products`);
-        setProducts(r.data || []);
+        const items = await getWishlistItemsFromServer();
+        setProducts(items || []);
       } catch (err) {
         console.error("Error fetching wishlist products:", err);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
     };
     fetchProducts();
-  }, []);
 
-  // Sync wishlist IDs if they change during the session
-  useEffect(() => {
-    const sync = () => setWishlistIds(getWishlist());
+    const sync = () => {
+      fetchProducts();
+    };
     window.addEventListener('wishlistChange', sync);
     return () => window.removeEventListener('wishlistChange', sync);
   }, []);
-
-  const wishlistedItems = useMemo(() => {
-    return products.filter(p => wishlistIds.includes(String(p._id || p.id)));
-  }, [products, wishlistIds]);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
@@ -59,7 +50,7 @@ const WishlistPage = () => {
             <div>
               <h1 className="text-3xl font-extrabold text-[var(--fg)] tracking-tight sm:text-4xl">My Wishlist</h1>
               <p className="mt-1 text-[var(--fg-muted)]">
-                {wishlistedItems.length} {wishlistedItems.length === 1 ? 'item' : 'items'} saved for later
+                {products.length} {products.length === 1 ? 'item' : 'items'} saved for later
               </p>
             </div>
           </div>
@@ -70,9 +61,9 @@ const WishlistPage = () => {
             <Loader2 className="h-10 w-10 animate-spin text-[var(--primary)]/60" />
             <p className="text-sm font-medium text-[var(--fg-subtle)]">Finding your items…</p>
           </div>
-        ) : wishlistedItems.length > 0 ? (
+        ) : products.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {wishlistedItems.map(p => (
+            {products.map(p => (
               <ProductCard key={p._id || p.id} product={p} />
             ))}
           </div>

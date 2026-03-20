@@ -1,6 +1,15 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
+import { sendOtpEmail } from '../services/emailService.js';
+import {
+    generateOtp,
+    hashOtp,
+    OTP_EXPIRE_MINUTES,
+    OTP_MAX_ATTEMPTS,
+    OTP_RESEND_COOLDOWN_SECONDS,
+    OTP_MAX_RESENDS,
+} from '../services/otpService.js';
 
 // ─────────────────────────────────────────────────────────────
 // HELPER: generate a signed JWT for a given user row
@@ -32,10 +41,40 @@ const formatUser = (user) => ({
     _id: user.user_id,
     name: user.name,
     email: user.email,
+    isEmailVerified: !!user.is_email_verified,
     status: user.status,
     greenCredits: user.green_credits,
     createdAt: user.created_at,
 });
+
+const saveOtpForUser = async (userId, otp) => {
+    const otpHash = hashOtp(otp);
+    await pool.execute(
+        `INSERT INTO email_verification_otps
+            (user_id, otp_hash, expires_at, attempts, resend_count, last_sent_at, consumed_at)
+         VALUES
+            (?, ?, DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? MINUTE), 0, 1, UTC_TIMESTAMP(), NULL)
+         ON DUPLICATE KEY UPDATE
+            otp_hash = VALUES(otp_hash),
+            expires_at = VALUES(expires_at),
+            attempts = 0,
+            consumed_at = NULL,
+            resend_count = resend_count + 1,
+            last_sent_at = UTC_TIMESTAMP()`,
+        [userId, otpHash, OTP_EXPIRE_MINUTES]
+    );
+};
+
+const generateAndSendOtp = async (user) => {
+    const otp = generateOtp();
+    await saveOtpForUser(user.user_id, otp);
+    await sendOtpEmail({
+        to: user.email,
+        name: user.name,
+        otp,
+        expiresMinutes: OTP_EXPIRE_MINUTES,
+    });
+};
 
 // ─────────────────────────────────────────────────────────────
 // POST /api/auth/signup
@@ -129,12 +168,16 @@ export const signup = async (req, res) => {
         );
         const newUser = rows[0];
 
-        // --- 6. Return token + user ---
-        const token = generateToken(newUser);
+        try {
+            await generateAndSendOtp(newUser);
+        } catch (otpErr) {
+            console.error('OTP send error after signup:', otpErr);
+        }
 
         return res.status(201).json({
-            message: 'Account created successfully',
-            token,
+            message: 'Account created. Please verify your email with the OTP sent to your inbox.',
+            requiresVerification: true,
+            email: newUser.email,
             user: formatUser(newUser),
         });
 
@@ -185,6 +228,14 @@ export const login = async (req, res) => {
             return res.status(403).json({ message: 'Your account is temporarily suspended.' });
         }
 
+        if (!user.is_email_verified) {
+            return res.status(403).json({
+                message: 'Please verify your email before logging in.',
+                code: 'EMAIL_NOT_VERIFIED',
+                email: user.email,
+            });
+        }
+
         // --- 4. Verify password ---
         // bcrypt.compare() re-hashes the plain-text password with the stored
         // salt and checks if it matches the stored hash — timing-safe
@@ -206,5 +257,150 @@ export const login = async (req, res) => {
     } catch (err) {
         console.error('Login error:', err);
         return res.status(500).json({ message: 'Server error during login' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
+// POST /api/auth/verify-otp
+// ─────────────────────────────────────────────────────────────
+export const verifyOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const normalizedEmail = (email || '').toLowerCase().trim();
+
+        if (!normalizedEmail || !otp) {
+            return res.status(400).json({ message: 'Email and OTP are required' });
+        }
+
+        const [users] = await pool.execute(
+            'SELECT user_id, email, is_email_verified FROM users WHERE email = ?',
+            [normalizedEmail]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: 'Account not found' });
+        }
+
+        const user = users[0];
+
+        if (user.is_email_verified) {
+            return res.status(200).json({ message: 'Email already verified' });
+        }
+
+        const [otpRows] = await pool.execute(
+            `SELECT otp_id, otp_hash, attempts, expires_at, consumed_at
+             FROM email_verification_otps
+             WHERE user_id = ?
+             LIMIT 1`,
+            [user.user_id]
+        );
+
+        if (otpRows.length === 0) {
+            return res.status(400).json({ message: 'No OTP found. Please request a new OTP.' });
+        }
+
+        const otpRow = otpRows[0];
+
+        if (otpRow.consumed_at) {
+            return res.status(400).json({ message: 'OTP already used. Please request a new OTP.' });
+        }
+
+        if (new Date(otpRow.expires_at).getTime() < Date.now()) {
+            return res.status(400).json({ message: 'OTP has expired. Please request a new OTP.' });
+        }
+
+        if (otpRow.attempts >= OTP_MAX_ATTEMPTS) {
+            return res.status(429).json({ message: 'Too many invalid attempts. Please request a new OTP.' });
+        }
+
+        const incomingHash = hashOtp(otp);
+        if (incomingHash !== otpRow.otp_hash) {
+            await pool.execute(
+                'UPDATE email_verification_otps SET attempts = attempts + 1 WHERE otp_id = ?',
+                [otpRow.otp_id]
+            );
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+
+        await pool.execute(
+            'UPDATE users SET is_email_verified = 1, email_verified_at = UTC_TIMESTAMP() WHERE user_id = ?',
+            [user.user_id]
+        );
+        await pool.execute(
+            'UPDATE email_verification_otps SET consumed_at = UTC_TIMESTAMP() WHERE otp_id = ?',
+            [otpRow.otp_id]
+        );
+
+        return res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
+    } catch (err) {
+        console.error('Verify OTP error:', err);
+        return res.status(500).json({ message: 'Server error during OTP verification' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
+// POST /api/auth/resend-otp
+// ─────────────────────────────────────────────────────────────
+export const resendOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const normalizedEmail = (email || '').toLowerCase().trim();
+
+        if (!normalizedEmail) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
+
+        const [users] = await pool.execute(
+            'SELECT user_id, name, email, is_email_verified FROM users WHERE email = ?',
+            [normalizedEmail]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: 'Account not found' });
+        }
+
+        const user = users[0];
+
+        if (user.is_email_verified) {
+            return res.status(400).json({ message: 'Email is already verified' });
+        }
+
+        const [otpRows] = await pool.execute(
+            `SELECT resend_count, last_sent_at
+             FROM email_verification_otps
+             WHERE user_id = ?
+             LIMIT 1`,
+            [user.user_id]
+        );
+
+        if (otpRows.length > 0) {
+            const otpRow = otpRows[0];
+            const lastSent = otpRow.last_sent_at ? new Date(otpRow.last_sent_at).getTime() : 0;
+            const cooldownMs = OTP_RESEND_COOLDOWN_SECONDS * 1000;
+            const timeLeft = Math.ceil((lastSent + cooldownMs - Date.now()) / 1000);
+
+            if (timeLeft > 0) {
+                return res.status(429).json({
+                    message: `Please wait ${timeLeft}s before requesting another OTP.`,
+                    retryAfterSeconds: timeLeft,
+                });
+            }
+
+            if (otpRow.resend_count >= OTP_MAX_RESENDS) {
+                return res.status(429).json({ message: 'OTP resend limit reached. Please contact support.' });
+            }
+        }
+
+        try {
+            await generateAndSendOtp(user);
+        } catch (otpErr) {
+            console.error('Resend OTP send error:', otpErr);
+            return res.status(500).json({ message: 'Failed to send OTP email. Please try again.' });
+        }
+
+        return res.status(200).json({ message: 'OTP sent successfully' });
+    } catch (err) {
+        console.error('Resend OTP error:', err);
+        return res.status(500).json({ message: 'Server error while resending OTP' });
     }
 };

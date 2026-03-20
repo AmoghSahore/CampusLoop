@@ -31,6 +31,7 @@ const ProductCard = ({ product }) => {
   const [liked,    setLiked]    = useState(() => isWishlisted(product._id));
   const [toastMsg, setToastMsg] = useState('');
   const [toastVis, setToastVis] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     const sync = () => setLiked(isWishlisted(product._id));
@@ -42,13 +43,23 @@ const ProductCard = ({ product }) => {
   const typeCfg  = getTypeCfg(product);
   const isFree   = product.price === 0 || typeCfg.label === 'Free';
 
-  const handleLike = (e) => {
+  const handleLike = async (e) => {
     e.preventDefault();
-    const added = toggleWishlist(product._id);
-    setLiked(added);
-    setToastMsg(added ? '♥ Saved to wishlist' : 'Removed from wishlist');
-    setToastVis(true);
-    setTimeout(() => setToastVis(false), 1800);
+    if (updating) return;
+    setUpdating(true);
+    try {
+      const added = await toggleWishlist(product._id);
+      setLiked(added);
+      setToastMsg(added ? '♥ Saved to wishlist' : 'Removed from wishlist');
+      setToastVis(true);
+      setTimeout(() => setToastVis(false), 1800);
+    } catch (_err) {
+      setToastMsg('Could not update wishlist');
+      setToastVis(true);
+      setTimeout(() => setToastVis(false), 1800);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   return (
@@ -75,7 +86,7 @@ const ProductCard = ({ product }) => {
           style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)' }} />
 
         {/* Wishlist */}
-        <button onClick={handleLike}
+        <button onClick={handleLike} disabled={updating}
           className={`absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full shadow-md backdrop-blur-sm transition-all duration-200 ${
             liked ? 'bg-rose-500 text-white scale-110' : 'bg-white/85 text-[var(--fg-muted)] hover:bg-white hover:text-rose-500 hover:scale-110'
           }`}

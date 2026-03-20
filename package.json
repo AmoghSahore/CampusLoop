@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "Platform for students to sell used products",
   "scripts": {
-    "install-all": "cd backend && npm install && cd ../frontend && npm install",
+    "install-all": "cd backend && npm install && cd ../frontend && npm install && cd ../admin-frontend && npm install",
+    "db:migrate": "cd backend && npm run db:migrate",
+    "db:seed:admin": "cd backend && npm run db:seed:admin",
+    "setup:backend": "cd backend && npm run setup",
     "backend": "cd backend && npm run dev",
     "frontend": "cd frontend && npm run dev",
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "build": "cd frontend && npm run build"
+    "admin-frontend": "cd admin-frontend && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\" \"npm run admin-frontend\"",
+    "build": "cd frontend && npm run build && cd ../admin-frontend && npm run build"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

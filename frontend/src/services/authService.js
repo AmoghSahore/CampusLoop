@@ -1,3 +1,4 @@
+import axios from 'axios';
 import API_BASE from '../config/api.js';
 
 // Base API URL - comes from VITE_API_URL env var (see frontend/.env)

@@ -15,12 +15,13 @@ cd campusloop
 
 ### 2. Install Dependencies
 ```bash
-# Install all dependencies (frontend + backend)
+# Install all dependencies (backend + frontend + admin-frontend)
 npm run install-all
 
 # OR install separately
 cd backend && npm install
 cd ../frontend && npm install
+cd ../admin-frontend && npm install
 ```
 
 ### 3. Setup Environment Variables
@@ -48,24 +49,37 @@ cp .env.example .env
 # Edit if needed (usually defaults are fine)
 ```
 
+#### Admin Frontend (.env)
+```bash
+cd admin-frontend
+cp .env.example .env
+# Edit if needed (usually defaults are fine)
+```
+
 ### 4. Setup Database
 
-#### Option A: Manual Setup
+#### Option A: Manual Setup (Recommended)
 ```bash
-# Login to MySQL
-mysql -u root -p
+# Run schema + pending migrations from root
+npm run db:migrate
 
-# Create database and tables
-mysql -u root -p < database/schema.sql
+# Seed/update initial admin account (uses backend/.env)
+npm run db:seed:admin
 ```
 
 #### Option B: Using Database Client
 - Open MySQL Workbench / phpMyAdmin / DBeaver
 - Execute `database/schema.sql`
 
+#### Option C: Backend One-Command Setup
+```bash
+npm run setup:backend
+```
+This runs migration and admin seed in sequence.
+
 ### 5. Start Development Servers
 
-#### Run Both (Frontend + Backend)
+#### Run All (Backend + User Frontend + Admin Frontend)
 ```bash
 # From root directory
 npm run dev
@@ -78,12 +92,15 @@ npm run backend
 
 # Frontend only (Terminal 2)
 npm run frontend
+
+# Admin frontend only (Terminal 3)
+npm run admin-frontend
 ```
 
 ### 6. Access the Application
 - **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:5000
-- **API Docs:** http://localhost:5000/api/docs (if implemented)
+- **Admin Frontend:** http://localhost:5174
+- **Backend API:** http://localhost:3001
 
 ## Common Issues
 
@@ -100,8 +117,9 @@ npm run frontend
 ```
 
 ### "Port already in use"
-- Backend (5000): Change `PORT` in `backend/.env`
+- Backend (3001): Change `PORT` in `backend/.env`
 - Frontend (5173): Kill process on port or change in `vite.config.js`
+- Admin frontend (5174): Kill process on port or change in `admin-frontend/package.json`
 
 ## Environment Variables
 
@@ -111,9 +129,14 @@ See `backend/.env.example` for all required variables.
 **Critical Variables:**
 - `DB_PASSWORD`: Your MySQL password
 - `JWT_SECRET`: Secret key for authentication (must be same for all team members)
+- `ADMIN_JWT_SECRET`: Secret key for admin login tokens
+- `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`: required to create/update initial admin
 
 ### Frontend Environment Variables
-- `VITE_API_URL`: Backend API URL (default: http://localhost:5000/api)
+- `VITE_API_URL`: Backend API URL (default: http://localhost:3001)
+
+### Admin Frontend Environment Variables
+- `VITE_API_URL`: Backend API URL (default: http://localhost:3001)
 
 ## Team Workflow
 

@@ -3,13 +3,21 @@ import { upload } from '../config/multer.js';
 import authMiddleware from '../middleware/auth.js';
 import checkActiveStatus from '../middleware/checkActiveStatus.js';
 import {
+    statusOtpRequestLimiter,
+    statusOtpConfirmLimiter,
+} from '../middleware/rateLimiters.js';
+import {
     getProducts,
     getProductById,
     getProductPrimaryImage,
     createListing,
     deleteListing,
 } from '../controllers/productController.js';
-import { updateProductStatus } from '../controllers/statusController.js';
+import {
+    updateProductStatus,
+    requestProductStatusOtp,
+    confirmProductStatusWithOtp,
+} from '../controllers/statusController.js';
 
 const router = Router();
 
@@ -26,5 +34,7 @@ router.delete('/products/:id', authMiddleware, checkActiveStatus, deleteListing)
 
 // Update product status (SOLD/DONATED) with green credits logic
 router.patch('/products/:id/status', authMiddleware, checkActiveStatus, updateProductStatus);
+router.post('/products/:id/status/request-otp', authMiddleware, checkActiveStatus, statusOtpRequestLimiter, requestProductStatusOtp);
+router.post('/products/:id/status/confirm-otp', authMiddleware, checkActiveStatus, statusOtpConfirmLimiter, confirmProductStatusWithOtp);
 
 export default router;
