@@ -1,36 +1,59 @@
-# ♻️ CampusLoop
-**A Circular Economy Marketplace for University Ecosystems**
+# CampusLoop
 
-> **Status:** Active Development (MCA Semester Project)  
-> **Stack:** React.js | Node.js (Express) | MySQL
+CampusLoop is a campus marketplace focused on reuse and safe peer-to-peer exchange for students.
 
----
+## Current Architecture
 
-## 📖 Overview
-**CampusLoop** is a hyper-local marketplace designed to solve the problem of resource wastage on university campuses. It allows students to buy, sell, rent, or donate academic essentials (textbooks, lab coats, drafters, electronics) within a trusted network.
+- `frontend/` — user app (React + Vite, port `5173`)
+- `admin-frontend/` — separate admin console (React + Vite, port `5174`)
+- `backend/` — API server (Node.js + Express + MySQL, port `3001`)
 
-Unlike generic platforms (OLX, Facebook), CampusLoop focuses on:
-* **Verification:** Users must be verified students.
-* **Sustainability:** A "Green Credits" gamification system rewards eco-friendly actions.
-* **Trust:** QR Code-based physical hand-offs to prevent scams.
+## Implemented Core Features
 
-## 🚀 Key Features
-* **🛒 Buy, Sell & Rent:** Categorized listings for academic and dorm essentials.
-* **💬 Real-time Chat:** Integrated messaging to negotiate prices and meetup spots.
-* **🌱 Green Credits:** Earn points for donating or recycling items; viewable on a Leaderboard.
-* **🔐 Secure Handoff:** Generate and validate OTPs to confirm transaction completion.
-* **🔍 Lost & Found:** A dedicated section to report and find lost campus items.
+- User signup/login with email verification OTP
+- Product listings (sell/rent/donate), image upload, and listing management
+- Wishlist persistence (server-backed for authenticated users)
+- Chat messaging between buyer and seller per product
+- Reporting + appeals flow
+- Admin moderation console:
+	- reports/appeals review
+	- user and product moderation
+	- admin action logs
+	- KPI dashboard + deep-linked filters + bulk actions
+- Listing completion OTP flow for `SOLD` / `DONATED` status confirmation
+- Green credits awarded on completed listing transitions
 
----
+## Quick Start
 
-## 🛠️ Tech Stack
+1. Install all dependencies:
 
-| Component | Technology |
-| :--- | :--- |
-| **Frontend** | React.js, React Router, Axios, CSS Modules |
-| **Backend** | Node.js, Express.js, Multer (File Handling) |
-| **Database** | MySQL (storing Data + Images as BLOBs) |
-| **Authentication** | JWT (JSON Web Tokens) |
-| **Version Control** | GitHub |
+```bash
+npm run install-all
+```
 
----
+2. Configure environment files from templates:
+
+- `backend/.env` from `backend/.env.example`
+- `frontend/.env` from `frontend/.env.example`
+- `admin-frontend/.env` from `admin-frontend/.env.example`
+
+3. Initialize DB using schema + migrations in `database/`.
+
+```bash
+npm run db:migrate
+npm run db:seed:admin
+```
+
+Or run both in one step:
+
+```bash
+npm run setup:backend
+```
+
+4. Run all apps:
+
+```bash
+npm run dev
+```
+
+For detailed setup steps, see `docs/SETUP.md`.

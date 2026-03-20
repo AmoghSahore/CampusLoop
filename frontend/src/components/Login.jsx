@@ -23,7 +23,12 @@ const Login = () => {
       window.dispatchEvent(new Event('authChange'));
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+      const payload = err.response?.data;
+      if (payload?.code === 'EMAIL_NOT_VERIFIED') {
+        navigate('/verify-email', { state: { email: payload?.email || form.email } });
+        return;
+      }
+      setError(payload?.message || 'Invalid credentials. Please try again.');
     } finally { setLoading(false); }
   };
 

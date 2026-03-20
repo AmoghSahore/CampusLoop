@@ -5,31 +5,38 @@ import { User, Mail, Building2, Lock, ArrowRight, Recycle, Eye, EyeOff } from 'l
 import API_BASE from '../config/api.js';
 
 const FIELDS = [
-  { name:'name',       label:'Full name',     type:'text',     icon:User,      placeholder:'Arjun Kumar',        auto:'name'         },
-  { name:'email',      label:'College email', type:'email',    icon:Mail,      placeholder:'you@college.edu',    auto:'email'        },
-  { name:'college',    label:'College / University', type:'text', icon:Building2, placeholder:'IIT Delhi',        auto:'organization' },
+  { name: 'fullName', label: 'Full name', type: 'text', icon: User, placeholder: 'Arjun Kumar', auto: 'name' },
+  { name: 'email', label: 'College email', type: 'email', icon: Mail, placeholder: 'you@christuniversity.in', auto: 'email' },
+  { name: 'college', label: 'College / University', type: 'text', icon: Building2, placeholder: 'Christ University', auto: 'organization' },
 ];
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [form,    setForm]    = useState({ name:'', email:'', college:'', password:'' });
+  const [form, setForm] = useState({ fullName: '', email: '', college: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
-  const [showPw,  setShowPw]  = useState(false);
-  const [agreed,  setAgreed]  = useState(false);
+  const [error, setError] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!agreed) { setError('Please accept the terms to continue.'); return; }
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
     setLoading(true); setError('');
     try {
-      const r = await axios.post(`${API_BASE}/api/auth/register`, form);
-      localStorage.setItem('token', r.data.token);
-      localStorage.setItem('user', JSON.stringify(r.data.user));
-      window.dispatchEvent(new Event('authChange'));
-      navigate('/');
+      await axios.post(`${API_BASE}/api/auth/signup`, {
+        fullName: form.fullName,
+        email: form.email,
+        college: form.college,
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+      });
+      navigate('/verify-email', { state: { email: form.email } });
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally { setLoading(false); }
@@ -39,17 +46,17 @@ const Signup = () => {
     <div className="flex min-h-screen">
       {/* Left brand panel */}
       <div className="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 relative overflow-hidden"
-        style={{ background:'var(--grad-hero)' }}>
+        style={{ background: 'var(--grad-hero)' }}>
         <div className="absolute inset-0 bg-dot-grid opacity-20 pointer-events-none" />
         <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full blur-3xl opacity-20"
-          style={{ background:'radial-gradient(circle,#4ade80,transparent)' }} />
+          style={{ background: 'radial-gradient(circle,#4ade80,transparent)' }} />
 
         <Link to="/" className="relative flex items-center gap-2.5">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl"
-            style={{ background:'var(--grad-primary)', boxShadow:'0 2px 12px var(--primary-glow)' }}>
+            style={{ background: 'var(--grad-primary)', boxShadow: '0 2px 12px var(--primary-glow)' }}>
             <Recycle className="h-5 w-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-white">Campus<span style={{ background:'linear-gradient(135deg,#a78bfa,#818cf8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Loop</span></span>
+          <span className="text-xl font-bold text-white">Campus<span style={{ background: 'linear-gradient(135deg,#a78bfa,#818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Loop</span></span>
         </Link>
 
         <div className="relative">
@@ -62,7 +69,7 @@ const Signup = () => {
 
           {/* Floating stat cards */}
           <div className="mt-10 grid grid-cols-2 gap-3">
-            {[['12.3k','Items rehomed'],['4.2k','Active students'],['₹0','Platform fees'],['8 min','Avg. reply']].map(([v,l])=>(
+            {[['12.3k', 'Items rehomed'], ['4.2k', 'Active students'], ['₹0', 'Platform fees'], ['8 min', 'Avg. reply']].map(([v, l]) => (
               <div key={l} className="rounded-xl border border-white/10 bg-white/6 p-4 backdrop-blur-sm">
                 <p className="text-xl font-extrabold text-violet-400">{v}</p>
                 <p className="mt-0.5 text-xs text-white/45">{l}</p>
@@ -78,7 +85,7 @@ const Signup = () => {
       <div className="flex flex-1 items-center justify-center bg-[var(--bg)] px-6 py-12">
         <div className="w-full max-w-md">
           <Link to="/" className="mb-8 flex items-center gap-2.5 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background:'var(--grad-primary)' }}>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--grad-primary)' }}>
               <Recycle className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold text-[var(--fg)]">Campus<span className="text-gradient">Loop</span></span>
@@ -113,18 +120,29 @@ const Signup = () => {
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
                 <input type={showPw ? 'text' : 'password'} name="password" required autoComplete="new-password"
-                  value={form.password} onChange={handleChange} placeholder="Min. 8 characters"
+                  value={form.password} onChange={handleChange} placeholder="Min. 6 characters"
                   className="input-base pl-10 pr-10" />
-                <button type="button" onClick={()=>setShowPw(v=>!v)}
+                <button type="button" onClick={() => setShowPw(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle)] hover:text-[var(--fg)] transition">
-                  {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
+                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-[var(--fg)]">Confirm Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                <input type="password" name="confirmPassword" required autoComplete="new-password"
+                  value={form.confirmPassword} onChange={handleChange} placeholder="Re-enter your password"
+                  className="input-base pl-10" />
               </div>
             </div>
 
             {/* Terms */}
             <label className="flex cursor-pointer items-start gap-3 pt-1">
-              <input type="checkbox" checked={agreed} onChange={e=>setAgreed(e.target.checked)}
+              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
                 className="mt-0.5 h-4 w-4 cursor-pointer accent-[var(--primary)]" />
               <span className="text-xs text-[var(--fg-muted)]">
                 I agree to the{' '}

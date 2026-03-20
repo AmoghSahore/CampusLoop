@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, Recycle, MessageSquare, User, Plus, Heart } from 'lucide-react';
-import { getWishlist } from '../utils/wishlist.js';
+import { getWishlist, syncWishlistFromServer } from '../utils/wishlist.js';
 
 const Navbar = () => {
   const [searchQuery,   setSearchQuery]   = useState('');
@@ -12,9 +12,17 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const syncAuth = () => setIsLoggedIn(!!localStorage.getItem('token'));
+    const syncAuth = async () => {
+      const loggedIn = !!localStorage.getItem('token');
+      setIsLoggedIn(loggedIn);
+      if (loggedIn) {
+        try { await syncWishlistFromServer(); } catch (_err) {}
+      }
+      setWishlistCount(getWishlist().length);
+    };
     window.addEventListener('storage',    syncAuth);
     window.addEventListener('authChange', syncAuth);
+    syncAuth();
     return () => { window.removeEventListener('storage', syncAuth); window.removeEventListener('authChange', syncAuth); };
   }, []);
 

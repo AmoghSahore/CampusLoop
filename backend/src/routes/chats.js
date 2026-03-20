@@ -1,9 +1,10 @@
 import { Router } from 'express';
+import authMiddleware from '../middleware/auth.js';
+import { getChatConversations } from '../controllers/chatController.js';
 
 const router = Router();
 
-// GET  /api/chats                     — Stage 5
-// GET  /api/chats/:id/messages        — Stage 5
-// POST /api/chats/:id/messages        — Stage 5
+// GET /api/chats — list distinct conversations for current user
+router.get('/', authMiddleware, getChatConversations);
 
 export default router;

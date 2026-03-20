@@ -136,6 +136,7 @@ export const getProductById = async (req, res) => {
             imageUrl: images[0]?.image_url || null,
             images: images.map((img) => img.image_url),
             seller: {
+                _id: product.seller_id,
                 name: product.seller_name,
                 email: product.seller_email,
             },
@@ -184,6 +185,7 @@ export const getProductPrimaryImage = async (req, res) => {
 // so multer processes the uploaded image before this handler runs.
 // req.file is set by multer with info about the saved file.
 export const createListing = async (req, res) => {
+    let newProductId = null;
     try {
         const { title, category, price, description, listingType } = req.body;
         const sellerId = req.user.userId; // from JWT — we know who's posting
@@ -217,16 +219,23 @@ export const createListing = async (req, res) => {
             [sellerId, title.trim(), description.trim(), category, finalPrice, dbListingType]
         );
 
-        const newProductId = result.insertId;
+        newProductId = result.insertId;
 
         // Only store an image if one was actually uploaded
         if (req.file) {
-            const cloudinaryResult = await uploadToCloudinary(req.file, 'campusloop/products');
-            const imageUrl = cloudinaryResult.secure_url;
-            await pool.execute(
-                'INSERT INTO product_images (product_id, image_url) VALUES (?, ?)',
-                [newProductId, imageUrl]
-            );
+            try {
+                const cloudinaryResult = await uploadToCloudinary(req.file, 'campusloop/products');
+                const imageUrl = cloudinaryResult.secure_url;
+                await pool.execute(
+                    'INSERT INTO product_images (product_id, image_url) VALUES (?, ?)',
+                    [newProductId, imageUrl]
+                );
+            } catch (uploadErr) {
+                await pool.execute('DELETE FROM products WHERE product_id = ? AND seller_id = ?', [newProductId, sellerId]);
+                return res.status(502).json({
+                    message: 'Image upload failed. Please check your upload configuration and try again.',
+                });
+            }
         }
 
         return res.status(201).json({
@@ -236,6 +245,9 @@ export const createListing = async (req, res) => {
 
     } catch (err) {
         console.error('Create listing error:', err);
+        if (newProductId && req.file) {
+            await pool.execute('DELETE FROM products WHERE product_id = ? AND seller_id = ?', [newProductId, req.user.userId]);
+        }
         return res.status(500).json({ message: 'Server error creating listing' });
     }
 };

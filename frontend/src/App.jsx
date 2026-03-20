@@ -7,6 +7,7 @@ import ChatPage from "./components/ChatPage";
 import ProfilePage from "./components/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import WishlistPage from "./components/WishlistPage";
+import VerifyEmail from "./components/VerifyEmail";
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
@@ -16,23 +17,28 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/product/:id" element={<ProductDetailsPage />} />
         <Route path="/post-ad" element={
-          // <ProtectedRoute>
+          <ProtectedRoute>
             <PostAdPage />
-          // </ProtectedRoute>
+          </ProtectedRoute>
         } />
         <Route path="/chat" element={
-          // <ProtectedRoute>
+          <ProtectedRoute>
             <ChatPage />
-          // </ProtectedRoute>
+          </ProtectedRoute>
         } />
         <Route path="/profile" element={
-          // <ProtectedRoute>
+          <ProtectedRoute>
             <ProfilePage />
-          // </ProtectedRoute>
+          </ProtectedRoute>
         } />
-        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/wishlist" element={
+          <ProtectedRoute>
+            <WishlistPage />
+          </ProtectedRoute>
+        } />
         <Route path="/" element={<HomePage />} />
       </Routes>
     </BrowserRouter>
