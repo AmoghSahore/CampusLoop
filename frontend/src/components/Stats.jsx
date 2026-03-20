@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Home, Scale, Clock, Users } from 'lucide-react';
+import { Reveal } from './Reveal';
 
 const statsData = [
   { icon: Home,  target: 12300, format: v => (v/1000).toFixed(1)+'k', label: 'Items rehomed',   iconBg: 'linear-gradient(135deg,#a78bfa,#7c3aed)', iconColor: '#fff' },
@@ -54,7 +55,11 @@ const Stats = () => {
         {/* Subtle gradient divider at top */}
         <div className="mb-10 h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #818cf8, transparent)' }} />
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-          {statsData.map((s) => <StatItem key={s.label} {...s} active={active} />)}
+          {statsData.map((s, i) => (
+            <Reveal key={s.label} delay={i * 0.1}>
+              <StatItem {...s} active={active} />
+            </Reveal>
+          ))}
         </div>
       </div>
     </section>

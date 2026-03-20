@@ -3,6 +3,7 @@ import axios from 'axios';
 import { SlidersHorizontal } from 'lucide-react';
 import API_BASE from '../config/api.js';
 import ProductCard from './ProductCard';
+import { Reveal } from './Reveal';
 
 const FILTERS = [
   { value:'ALL',    label:'All items'  },
@@ -132,7 +133,11 @@ const Listings = ({ searchQuery='', selectedCategory='' }) => {
         {!loading && paged.length>0 && (
           <>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {paged.map(p=><ProductCard key={p._id||p.id} product={p} />)}
+              {paged.map((p, i) => (
+                <Reveal key={p._id || p.id} delay={(i % 4) * 0.05}>
+                  <ProductCard product={p} />
+                </Reveal>
+              ))}
             </div>
             {hasMore && (
               <div className="mt-12 flex justify-center">

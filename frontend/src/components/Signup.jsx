@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { User, Mail, Building2, Lock, ArrowRight, Recycle, Eye, EyeOff } from 'lucide-react';
 import API_BASE from '../config/api.js';
+import { Reveal } from './Reveal';
 
 const FIELDS = [
   { name:'name',       label:'Full name',     type:'text',     icon:User,      placeholder:'Arjun Kumar',        auto:'name'         },
@@ -12,7 +13,7 @@ const FIELDS = [
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [form,    setForm]    = useState({ name:'', email:'', college:'', password:'' });
+  const [form,    setForm]    = useState({ name:'', email:'', college:'', password:'', confirmPassword:'' });
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
   const [showPw,  setShowPw]  = useState(false);
@@ -25,7 +26,14 @@ const Signup = () => {
     if (!agreed) { setError('Please accept the terms to continue.'); return; }
     setLoading(true); setError('');
     try {
-      const r = await axios.post(`${API_BASE}/api/auth/register`, form);
+      const payload = {
+        fullName: form.name,
+        email: form.email,
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+        university: form.college
+      };
+      const r = await axios.post(`${API_BASE}/api/auth/signup`, payload);
       localStorage.setItem('token', r.data.token);
       localStorage.setItem('user', JSON.stringify(r.data.user));
       window.dispatchEvent(new Event('authChange'));
@@ -95,51 +103,72 @@ const Signup = () => {
           )}
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            {FIELDS.map(({ name, label, type, icon: Icon, placeholder, auto }) => (
-              <div key={name}>
-                <label className="mb-1.5 block text-sm font-semibold text-[var(--fg)]">{label}</label>
-                <div className="relative">
-                  <Icon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
-                  <input type={type} name={name} required autoComplete={auto}
-                    value={form[name]} onChange={handleChange} placeholder={placeholder}
-                    className="input-base pl-10" />
+            {FIELDS.map(({ name, label, type, icon: Icon, placeholder, auto }, i) => (
+              <Reveal key={name} delay={i * 0.05}>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-[var(--fg)]">{label}</label>
+                  <div className="relative">
+                    <Icon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                    <input type={type} name={name} required autoComplete={auto}
+                      value={form[name]} onChange={handleChange} placeholder={placeholder}
+                      className="input-base pl-10 w-full" />
+                  </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
 
             {/* Password */}
-            <div>
-              <label className="mb-1.5 block text-sm font-semibold text-[var(--fg)]">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
-                <input type={showPw ? 'text' : 'password'} name="password" required autoComplete="new-password"
-                  value={form.password} onChange={handleChange} placeholder="Min. 8 characters"
-                  className="input-base pl-10 pr-10" />
-                <button type="button" onClick={()=>setShowPw(v=>!v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle)] hover:text-[var(--fg)] transition">
-                  {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
-                </button>
+            <Reveal delay={0.2}>
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-[var(--fg)]">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                  <input type={showPw ? 'text' : 'password'} name="password" required autoComplete="new-password"
+                    value={form.password} onChange={handleChange} placeholder="Min. 8 characters"
+                    className="input-base pl-10 pr-10 w-full" />
+                  <button type="button" onClick={()=>setShowPw(v=>!v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle)] hover:text-[var(--fg)] transition">
+                    {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
+                  </button>
+                </div>
               </div>
-            </div>
+            </Reveal>
+
+            {/* Confirm Password */}
+            <Reveal delay={0.25}>
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-[var(--fg)]">Confirm Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                  <input type={showPw ? 'text' : 'password'} name="confirmPassword" required autoComplete="new-password"
+                    value={form.confirmPassword} onChange={handleChange} placeholder="Repeat your password"
+                    className="input-base pl-10 pr-10 w-full" />
+                </div>
+              </div>
+            </Reveal>
 
             {/* Terms */}
-            <label className="flex cursor-pointer items-start gap-3 pt-1">
-              <input type="checkbox" checked={agreed} onChange={e=>setAgreed(e.target.checked)}
-                className="mt-0.5 h-4 w-4 cursor-pointer accent-[var(--primary)]" />
-              <span className="text-xs text-[var(--fg-muted)]">
-                I agree to the{' '}
-                <a href="#" className="font-semibold text-[var(--primary)] hover:underline">Terms of Service</a>{' '}
-                and{' '}
-                <a href="#" className="font-semibold text-[var(--primary)] hover:underline">Privacy Policy</a>
-              </span>
-            </label>
+            <Reveal delay={0.3}>
+              <label className="flex cursor-pointer items-start gap-3 pt-1">
+                <input type="checkbox" checked={agreed} onChange={e=>setAgreed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 cursor-pointer accent-[var(--primary)]" />
+                <span className="text-xs text-[var(--fg-muted)]">
+                  I agree to the{' '}
+                  <a href="#" className="font-semibold text-[var(--primary)] hover:underline">Terms of Service</a>{' '}
+                  and{' '}
+                  <a href="#" className="font-semibold text-[var(--primary)] hover:underline">Privacy Policy</a>
+                </span>
+              </label>
+            </Reveal>
 
-            <button type="submit" disabled={loading || !agreed}
-              className="btn-primary mt-2 w-full justify-center py-3 text-base gap-2">
-              {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-              {loading ? 'Creating account…' : 'Create account'}
-              {!loading && <ArrowRight size={16} />}
-            </button>
+            <Reveal delay={0.35}>
+              <button type="submit" disabled={loading || !agreed}
+                className="btn-primary mt-2 w-full justify-center py-3 text-base gap-2">
+                {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
+                {loading ? 'Creating account…' : 'Create account'}
+                {!loading && <ArrowRight size={16} />}
+              </button>
+            </Reveal>
           </form>
         </div>
       </div>

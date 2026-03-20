@@ -7,6 +7,7 @@ import Stats from './Stats';
 import Categories from './Categories';
 import Listings from './Listings';
 import Footer from './Footer';
+import { Reveal } from './Reveal';
 
 const HomePage = () => {
   const [searchParams]   = useSearchParams();
@@ -45,10 +46,18 @@ const HomePage = () => {
     <div className="min-h-screen bg-[var(--bg)]">
       <Navbar />
       <main>
-        <Hero />
-        <Stats />
-        <Categories />
-        <Listings searchQuery={searchQuery} selectedCategory={selectedCategory} />
+        <Reveal>
+          <Hero />
+        </Reveal>
+        <Reveal delay={0.1}>
+          <Stats />
+        </Reveal>
+        <Reveal delay={0.1}>
+          <Categories />
+        </Reveal>
+        <Reveal delay={0.1}>
+          <Listings searchQuery={searchQuery} selectedCategory={selectedCategory} />
+        </Reveal>
       </main>
       <Footer />
 

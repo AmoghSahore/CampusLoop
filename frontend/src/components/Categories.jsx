@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BookOpen, Laptop, FlaskConical, Armchair, Shirt, Package } from 'lucide-react';
+import { Reveal } from './Reveal';
 
 const categories = [
   { title:'Textbooks',     count:342, icon:BookOpen,    grad:'linear-gradient(135deg,#bfdbfe,#93c5fd)', textColor:'#1d4ed8' },
@@ -31,26 +32,28 @@ const Categories = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {categories.map((cat) => {
+          {categories.map((cat, i) => {
             const isSelected = normalize(selected) === normalize(cat.title);
             const Icon = cat.icon;
             return (
-              <button key={cat.title} onClick={() => handleClick(cat.title)}
-                className={`group glass-card flex flex-col items-center gap-3 p-5 text-center transition-all duration-200 hover:-translate-y-1.5 ${
-                  isSelected ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] bg-[var(--primary-light)]' : 'hover:border-[var(--primary)]/60'
-                }`}>
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
-                  style={{ background: cat.grad }}>
-                  <Icon className="h-6 w-6" style={{ color: cat.textColor }} />
-                </div>
-                <div>
-                  <p className={`text-sm font-bold ${isSelected ? 'text-[var(--primary)]' : 'text-[var(--fg)]'}`}>{cat.title}</p>
-                  <p className="mt-0.5 text-xs text-[var(--fg-muted)]">{cat.count} items</p>
-                </div>
-                {isSelected && (
-                  <span className="mt-0.5 text-xs font-semibold text-[var(--primary)]">✓ Active</span>
-                )}
-              </button>
+              <Reveal key={cat.title} delay={i * 0.05}>
+                <button onClick={() => handleClick(cat.title)}
+                  className={`group glass-card flex flex-col items-center gap-3 p-5 text-center transition-all duration-200 hover:-translate-y-1.5 w-full ${
+                    isSelected ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] bg-[var(--primary-light)]' : 'hover:border-[var(--primary)]/60'
+                  }`}>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+                    style={{ background: cat.grad }}>
+                    <Icon className="h-6 w-6" style={{ color: cat.textColor }} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-bold ${isSelected ? 'text-[var(--primary)]' : 'text-[var(--fg)]'}`}>{cat.title}</p>
+                    <p className="mt-0.5 text-xs text-[var(--fg-muted)]">{cat.count} items</p>
+                  </div>
+                  {isSelected && (
+                    <span className="mt-0.5 text-xs font-semibold text-[var(--primary)]">✓ Active</span>
+                  )}
+                </button>
+              </Reveal>
             );
           })}
         </div>
